@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { obtenerNoticias, guardarNoticias } from '@/app/lib/noticias'
 import { obtenerPrecios, guardarPrecios } from '@/app/lib/mercado'
+import { evaluarAlertas } from '@/app/lib/alertas'
 
 // Clave secreta para que solo Supabase pueda llamar este endpoint
 const CRON_SECRET = process.env.CRON_SECRET
@@ -31,6 +32,14 @@ export async function GET(req: NextRequest) {
     resultados.precios = { obtenidos: precios.length, guardados, valores: precios.map(p => ({ serie: p.codigo_serie, valor: p.valor })) }
   } catch (err) {
     resultados.precios = { error: String(err) }
+  }
+
+  // 3. Evaluar reglas de alerta (después de tener los precios frescos)
+  try {
+    const alertasNuevas = await evaluarAlertas()
+    resultados.alertas = { nuevas: alertasNuevas }
+  } catch (err) {
+    resultados.alertas = { error: String(err) }
   }
 
   resultados.duracion_ms = Date.now() - inicio

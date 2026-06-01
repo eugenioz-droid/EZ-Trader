@@ -3,31 +3,42 @@ import { supabaseAdmin } from './supabase'
 
 const parser = new Parser({
   timeout: 10000,
-  headers: { 'User-Agent': 'EZ-Trader/1.0' }
+  headers: { 'User-Agent': 'Mozilla/5.0 (EZ-Trader/1.0)' }
 })
 
 // Feeds RSS configurados (se mueven a tabla fuentes más adelante)
-// Reuters eliminó sus RSS en 2020 — usamos Google News con búsquedas específicas
 const FEEDS = [
+  // Feeds rápidos intradía (inglés, financiero)
+  {
+    nombre: 'FXStreet',
+    url: 'https://www.fxstreet.com/rss/news',
+    fuente_nombre: 'FXStreet',
+    idioma: 'en'
+  },
+  {
+    nombre: 'investingLive',
+    url: 'https://investinglive.com/feed/news',
+    fuente_nombre: 'investingLive (ForexLive)',
+    idioma: 'en'
+  },
+  // Google News (español, limitado a 7 días para frescura)
   {
     nombre: 'Google News - Dólar Peso Chileno',
-    url: 'https://news.google.com/rss/search?q=dolar+peso+chileno+USD+CLP&hl=es-419&gl=CL&ceid=CL:es-419',
-    fuente_nombre: 'Investing.com USD/CLP'
+    url: 'https://news.google.com/rss/search?q=dolar+peso+chileno+USD+CLP+when:7d&hl=es-419&gl=CL&ceid=CL:es-419',
+    fuente_nombre: 'Investing.com USD/CLP',
+    idioma: 'es'
   },
   {
     nombre: 'Google News - Cobre Chile',
-    url: 'https://news.google.com/rss/search?q=cobre+precio+Chile+copper&hl=es-419&gl=CL&ceid=CL:es-419',
-    fuente_nombre: 'Reuters RSS'
-  },
-  {
-    nombre: 'Google News - Fed tasas mercados',
-    url: 'https://news.google.com/rss/search?q=Federal+Reserve+tasa+dolar+emergentes&hl=es-419&gl=CL&ceid=CL:es-419',
-    fuente_nombre: 'Federal Reserve RSS'
+    url: 'https://news.google.com/rss/search?q=cobre+precio+Chile+copper+when:7d&hl=es-419&gl=CL&ceid=CL:es-419',
+    fuente_nombre: 'Reuters RSS',
+    idioma: 'es'
   },
   {
     nombre: 'Google News - China economia',
-    url: 'https://news.google.com/rss/search?q=China+economia+cobre+estimulo&hl=es-419&gl=CL&ceid=CL:es-419',
-    fuente_nombre: 'Reuters RSS'
+    url: 'https://news.google.com/rss/search?q=China+economia+cobre+estimulo+when:7d&hl=es-419&gl=CL&ceid=CL:es-419',
+    fuente_nombre: 'Reuters RSS',
+    idioma: 'es'
   }
 ]
 
@@ -37,6 +48,7 @@ export interface NoticiaRaw {
   url: string
   publicado_at: string | null
   fuente_nombre: string
+  idioma: string
 }
 
 export async function obtenerNoticias(): Promise<NoticiaRaw[]> {
@@ -52,7 +64,8 @@ export async function obtenerNoticias(): Promise<NoticiaRaw[]> {
           resumen: item.contentSnippet ?? item.summary ?? null,
           url: item.link,
           publicado_at: item.pubDate ?? item.isoDate ?? null,
-          fuente_nombre: feed.fuente_nombre
+          fuente_nombre: feed.fuente_nombre,
+          idioma: feed.idioma
         })
       }
     } catch (err) {
@@ -66,7 +79,6 @@ export async function obtenerNoticias(): Promise<NoticiaRaw[]> {
 export async function guardarNoticias(noticias: NoticiaRaw[]): Promise<number> {
   if (noticias.length === 0) return 0
 
-  // Obtener IDs de fuentes
   const { data: fuentes } = await supabaseAdmin
     .from('fuentes')
     .select('id, nombre')
@@ -86,11 +98,10 @@ export async function guardarNoticias(noticias: NoticiaRaw[]): Promise<number> {
     publicado_at: n.publicado_at,
     fuente_id: fuenteMap.get(n.fuente_nombre) ?? null,
     instrumento_id: instrumento?.id ?? null,
-    idioma: 'es',
+    idioma: n.idioma,
     capturado_at: new Date().toISOString()
   }))
 
-  // onConflict: si la URL ya existe, no inserta (dedup)
   const { data, error } = await supabaseAdmin
     .from('noticias')
     .upsert(rows, { onConflict: 'url', ignoreDuplicates: true })

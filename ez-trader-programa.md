@@ -79,7 +79,7 @@ BASE DE DATOS (Supabase)
 | 3.12 | Configurar Cron Job (Supabase cada 15 min)               | ☑        | TÚ+YO  |
 | 3.13 | Guardar noticias, cotización y datos de mercado en BD    | ☑        | YO     |
 | 3.14 | Testing de endpoints y cron (verificar que funciona)     | ☑        | TÚ+YO  |
-| 3.15 | Crear motor de alertas por reglas (umbrales: cobre, DXY, precio, noticia alto impacto)| ☐ | YO |
+| 3.15 | Crear motor de alertas por reglas (cobre, DXY, precio) — integrado al cron| ☑ | YO |
 | 3.16 | Afinar cadencia de feeds críticos para ganar latencia al bróker| ☐  | TÚ+YO  |
 | 3.17 | [Post-MVP] Integrar dato de mercado: Petróleo [Tier 2]   | ☐        | YO     |
 | 3.18 | [Post-MVP] Integrar dato de mercado: VIX [Tier 2]        | ☐        | YO     |
@@ -96,11 +96,13 @@ BASE DE DATOS (Supabase)
 | 4.3  | Panel de cotización USD/CLP en tiempo real               | ☑        | YO     |
 | 4.4  | Panel de factores de mercado (cobre, DXY, tasas + dirección)| ☑     | YO     |
 | 4.4.a| Indicador de alineación de factores (sesgo direccional cuando los Tier 1 coinciden)| ☑ | YO |
-| 4.5  | Filtros por factor, por impacto, por fecha               | ☐        | YO     |
+| 4.5  | Filtros por fuente de noticias                           | ☑        | YO     |
 | 4.6  | Panel del agente (chat lateral)                          | ☑        | YO     |
 | 4.7  | Indicador de última actualización (header + cotización)  | ☑        | YO     |
-| 4.7.a| Revisar fuentes RSS más actuales y de menor latencia     | ☐        | TÚ+YO  |
-| 4.8  | Responsive (funciona en móvil y desktop)                 | ☐        | YO     |
+| 4.7.a| Revisar fuentes RSS más actuales (FXStreet + investingLive agregadas)| ☑ | TÚ+YO |
+| 4.12 | Gráfico histórico USD/CLP (SVG, columna central)         | ☑        | YO     |
+| 4.14 | Briefing descargable para GPT (puente mientras no hay agente)| ☑    | YO     |
+| 4.8  | Responsive (funciona en móvil y desktop)                 | ☑        | YO     |
 | 4.9  | Estructura para segundo tab (otro instrumento, vacío)    | ☐        | YO     |
 | 4.10 | Mostrar alertas en UI (badge/notificación en panel colapsable)| ☐  | YO     |
 | 4.11 | [Post-MVP] Botón "Refresh live" (fetch on-demand de noticias)| ☐   | YO     |
@@ -113,9 +115,9 @@ BASE DE DATOS (Supabase)
 
 | N°   | Descripción                                              | Realizado | Quién  |
 |------|----------------------------------------------------------|-----------|--------|
-| 5.1  | Testing completo del flujo (noticias → BD → frontend)    | ☐        | TÚ+YO  |
-| 5.2  | Verificar que cron ejecuta correctamente cada 15 min     | ☐        | TÚ+YO  |
-| 5.3  | Deploy a Netlify y verificar en producción               | ☐        | YO     |
+| 5.1  | Testing completo del flujo (noticias → BD → frontend)    | ☑        | TÚ+YO  |
+| 5.2  | Verificar que cron ejecuta correctamente cada 15 min     | ☑        | TÚ+YO  |
+| 5.3  | Deploy a Netlify y verificar en producción               | ☑        | YO     |
 | 5.4  | Monitoreo post-launch (logs, errores)                    | ☐        | TÚ+YO  |
 | 5.5  | Ajustes finales según lo que veas en uso real            | ☐        | YO     |
 

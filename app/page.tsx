@@ -1,10 +1,13 @@
 import { Suspense } from 'react'
 import PanelNoticias from './components/noticias/PanelNoticias'
 import PanelCotizacion from './components/cotizacion/PanelCotizacion'
+import HistorialCotizacion from './components/cotizacion/HistorialCotizacion'
 import PanelFactores from './components/cotizacion/PanelFactores'
 import PanelAgente from './components/agente/PanelAgente'
 import BotonRefresh from './components/ui/BotonRefresh'
+import BotonBriefing from './components/ui/BotonBriefing'
 import UltimaActualizacion from './components/ui/UltimaActualizacion'
+import PanelAlertas from './components/ui/PanelAlertas'
 
 export const dynamic = 'force-dynamic'
 
@@ -28,6 +31,8 @@ export default async function Home({
           <Suspense fallback={null}>
             <UltimaActualizacion />
           </Suspense>
+          <PanelAlertas />
+          <BotonBriefing />
           <BotonRefresh />
           <div className="hidden sm:flex items-center gap-2 text-xs text-gray-500">
             <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
@@ -53,6 +58,9 @@ export default async function Home({
         <Suspense fallback={<CargandoPanel texto="Cargando mercado..." />}>
           <PanelCotizacion />
         </Suspense>
+        <Suspense fallback={null}>
+          <HistorialCotizacion />
+        </Suspense>
         <Suspense fallback={<CargandoPanel texto="Cargando factores..." />}>
           <PanelFactores />
         </Suspense>
@@ -68,10 +76,13 @@ export default async function Home({
           </Suspense>
         </div>
 
-        {/* Columna central: Cotización + Factores (solo desktop) */}
+        {/* Columna central: Cotización + Gráfico + Factores (solo desktop) */}
         <div className="hidden lg:block lg:col-span-1 border-r border-gray-800 overflow-y-auto">
           <Suspense fallback={<CargandoPanel texto="Cargando mercado..." />}>
             <PanelCotizacion />
+          </Suspense>
+          <Suspense fallback={null}>
+            <HistorialCotizacion />
           </Suspense>
           <Suspense fallback={<CargandoPanel texto="Cargando factores..." />}>
             <PanelFactores />
