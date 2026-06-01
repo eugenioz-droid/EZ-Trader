@@ -1,0 +1,39 @@
+'use client'
+
+import { useRouter, useSearchParams } from 'next/navigation'
+
+const FUENTES = [
+  { valor: '', label: 'Todas' },
+  { valor: 'Investing.com USD/CLP', label: 'USD/CLP' },
+  { valor: 'Reuters RSS', label: 'Mercados' },
+  { valor: 'Federal Reserve RSS', label: 'Fed' },
+]
+
+export default function FiltroNoticias() {
+  const router = useRouter()
+  const params = useSearchParams()
+  const actual = params.get('fuente') ?? ''
+
+  function cambiarFiltro(valor: string) {
+    const url = valor ? `/?fuente=${encodeURIComponent(valor)}` : '/'
+    router.push(url)
+  }
+
+  return (
+    <div className="flex gap-1 flex-wrap">
+      {FUENTES.map((f) => (
+        <button
+          key={f.valor}
+          onClick={() => cambiarFiltro(f.valor)}
+          className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
+            actual === f.valor
+              ? 'border-blue-500 text-blue-400 bg-blue-900/30'
+              : 'border-gray-700 text-gray-500 hover:border-gray-500 hover:text-gray-300'
+          }`}
+        >
+          {f.label}
+        </button>
+      ))}
+    </div>
+  )
+}
