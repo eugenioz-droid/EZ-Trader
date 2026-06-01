@@ -98,7 +98,8 @@ BASE DE DATOS (Supabase)
 | 4.4.a| Indicador de alineación de factores (sesgo direccional cuando los Tier 1 coinciden)| ☑ | YO |
 | 4.5  | Filtros por factor, por impacto, por fecha               | ☐        | YO     |
 | 4.6  | Panel del agente (chat lateral)                          | ☑        | YO     |
-| 4.7  | Indicador de última actualización                        | ☐        | YO     |
+| 4.7  | Indicador de última actualización (header + cotización)  | ☐        | YO     |
+| 4.7.a| Revisar fuentes RSS más actuales y de menor latencia     | ☐        | TÚ+YO  |
 | 4.8  | Responsive (funciona en móvil y desktop)                 | ☐        | YO     |
 | 4.9  | Estructura para segundo tab (otro instrumento, vacío)    | ☐        | YO     |
 | 4.10 | Mostrar alertas en UI (badge/notificación en panel colapsable)| ☐  | YO     |

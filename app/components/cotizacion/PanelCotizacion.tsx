@@ -30,11 +30,22 @@ export default async function PanelCotizacion() {
 
   const subiendo = variacion !== null ? variacion > 0 : null
 
+  const horaActualizacion = actual?.fecha_dato
+    ? new Date(actual.fecha_dato).toLocaleTimeString('es-CL', {
+        hour: '2-digit', minute: '2-digit', timeZone: 'America/Santiago'
+      })
+    : null
+
   return (
     <div className="border-b border-gray-800 px-4 py-4">
-      <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
-        Cotización
-      </h2>
+      <div className="flex items-center justify-between mb-3">
+        <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+          Cotización
+        </h2>
+        {horaActualizacion && (
+          <span className="text-xs text-gray-600">Actualizado {horaActualizacion} (Santiago)</span>
+        )}
+      </div>
 
       {!actual ? (
         <p className="text-sm text-gray-600">Sin datos aún</p>
