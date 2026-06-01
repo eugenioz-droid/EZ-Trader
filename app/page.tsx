@@ -3,6 +3,7 @@ import PanelNoticias from './components/noticias/PanelNoticias'
 import PanelCotizacion from './components/cotizacion/PanelCotizacion'
 import PanelFactores from './components/cotizacion/PanelFactores'
 import PanelAgente from './components/agente/PanelAgente'
+import BotonRefresh from './components/ui/BotonRefresh'
 
 export const dynamic = 'force-dynamic'
 
@@ -15,9 +16,12 @@ export default function Home() {
           <span className="text-xl font-bold tracking-tight">EZ Trader</span>
           <span className="text-xs bg-blue-900 text-blue-300 px-2 py-0.5 rounded-full">USD/CLP</span>
         </div>
-        <div className="flex items-center gap-2 text-xs text-gray-500">
-          <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
-          En vivo · actualiza cada 15 min
+        <div className="flex items-center gap-3">
+          <BotonRefresh />
+          <div className="flex items-center gap-2 text-xs text-gray-500">
+            <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
+            En vivo · cada 15 min
+          </div>
         </div>
       </header>
 

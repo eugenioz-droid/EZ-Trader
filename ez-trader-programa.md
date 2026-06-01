@@ -91,13 +91,13 @@ BASE DE DATOS (Supabase)
 
 | N°   | Descripción                                              | Realizado | Quién  |
 |------|----------------------------------------------------------|-----------|--------|
-| 4.1  | Crear layout principal (header, tabs, panels)            | ☐        | YO     |
-| 4.2  | Panel de noticias (tarjetas con título, resumen, impacto)| ☐        | YO     |
-| 4.3  | Panel de cotización USD/CLP en tiempo real               | ☐        | YO     |
-| 4.4  | Panel de factores de mercado (cobre, DXY, tasas + dirección)| ☐     | YO     |
-| 4.4.a| Indicador de alineación de factores (sesgo direccional cuando los Tier 1 coinciden)| ☐ | YO |
+| 4.1  | Crear layout principal (header, tabs, panels)            | ☑        | YO     |
+| 4.2  | Panel de noticias (tarjetas con título, resumen, impacto)| ☑        | YO     |
+| 4.3  | Panel de cotización USD/CLP en tiempo real               | ☑        | YO     |
+| 4.4  | Panel de factores de mercado (cobre, DXY, tasas + dirección)| ☑     | YO     |
+| 4.4.a| Indicador de alineación de factores (sesgo direccional cuando los Tier 1 coinciden)| ☑ | YO |
 | 4.5  | Filtros por factor, por impacto, por fecha               | ☐        | YO     |
-| 4.6  | Panel del agente (chat lateral)                          | ☐        | YO     |
+| 4.6  | Panel del agente (chat lateral)                          | ☑        | YO     |
 | 4.7  | Indicador de última actualización                        | ☐        | YO     |
 | 4.8  | Responsive (funciona en móvil y desktop)                 | ☐        | YO     |
 | 4.9  | Estructura para segundo tab (otro instrumento, vacío)    | ☐        | YO     |
