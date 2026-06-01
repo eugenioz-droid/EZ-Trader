@@ -76,7 +76,7 @@ BASE DE DATOS (Supabase)
 | 3.9  | Crear endpoint GET /api/cotizacion                       | ☑        | YO     |
 | 3.10 | Crear endpoint GET /api/datos-mercado (cobre, DXY, tasas)| ☑        | YO     |
 | 3.11 | Crear endpoint GET /api/analisis-historico               | ☐        | YO     |
-| 3.12 | Configurar Cron Job (Supabase cada 15 min)               | ☐        | TÚ+YO  |
+| 3.12 | Configurar Cron Job (Supabase cada 15 min)               | ☑        | TÚ+YO  |
 | 3.13 | Guardar noticias, cotización y datos de mercado en BD    | ☑        | YO     |
 | 3.14 | Testing de endpoints y cron (verificar que funciona)     | ☑        | TÚ+YO  |
 | 3.15 | Crear motor de alertas por reglas (umbrales: cobre, DXY, precio, noticia alto impacto)| ☐ | YO |
