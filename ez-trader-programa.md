@@ -55,8 +55,8 @@ BASE DE DATOS (Supabase)
 | 2.2  | Definir factores que afectan USD/CLP (ver docs/factores-usd-clp.md) | ☑ | TÚ+YO  |
 | 2.3  | Definir foco del dashboard y gráficos (ver docs/diseno-mvp.md) | ☑  | TÚ+YO  |
 | 2.4  | Definir modelo de uso y operación del agente (ver docs/diseno-mvp.md) | ☑ | TÚ+YO |
-| 2.5  | Diseñar estructura de tablas en BD (con Opus)            | ☐        | YO     |
-| 2.6  | Crear tablas en Supabase según diseño                    | ☐        | YO     |
+| 2.5  | Diseñar estructura de tablas en BD (ver docs/bd-diseno.md + migraciones)| ☑ | YO |
+| 2.6  | Crear tablas en Supabase (ejecutar migraciones 0001 y 0002)| ☑      | TÚ+YO  |
 
 ---
 
@@ -66,7 +66,7 @@ BASE DE DATOS (Supabase)
 |------|----------------------------------------------------------|-----------|--------|
 | 3.0  | Instalar Node.js (portable) y agregarlo al PATH de Git Bash (PREREQUISITO)| ☑ | TÚ |
 | 3.1  | Setup inicial Next.js (estructura del proyecto)          | ☑        | YO     |
-| 3.2  | Configurar variables de entorno (Supabase, APIs externas)| ☐        | YO     |
+| 3.2  | Configurar variables de entorno (Supabase, APIs externas)| ☑        | YO     |
 | 3.3  | Integrar fuente de noticias (RSS o API definida en 2.1)  | ☐        | YO     |
 | 3.4  | Integrar API financiera para cotización USD/CLP          | ☐        | YO     |
 | 3.5  | Integrar dato de mercado: Cobre [Tier 1]                 | ☐        | YO     |
@@ -83,7 +83,7 @@ BASE DE DATOS (Supabase)
 | 3.16 | Afinar cadencia de feeds críticos para ganar latencia al bróker| ☐  | TÚ+YO  |
 | 3.17 | [Post-MVP] Integrar dato de mercado: Petróleo [Tier 2]   | ☐        | YO     |
 | 3.18 | [Post-MVP] Integrar dato de mercado: VIX [Tier 2]        | ☐        | YO     |
-| 3.19 | Crear cuentas/keys de APIs: Twelve Data, FRED, Banco Central BDE (prerequisito de 3.3–3.7)| ☐ | TÚ |
+| 3.19 | Crear cuentas/keys de APIs: Twelve Data ☑ FRED ☑ Banco Central (pendiente correo) | ☑* | TÚ |
 
 ---
 
