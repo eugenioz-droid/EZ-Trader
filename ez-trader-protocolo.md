@@ -63,6 +63,8 @@
 ## Restricciones del entorno
 
 - **PowerShell está bloqueado** en este equipo. Para comandos de terminal usar siempre **Git Bash Portable**.
+- **Sin permisos de administrador.** No se pueden instalar programas con instalador (.msi, .exe con UAC). Usar siempre versiones portables (.zip) o instalación por npm/pip.
+- **Node.js portable** en `C:\Users\ezalazar\Tools\node\node-v24.16.0-win-x64`. Agregar al PATH en cada sesión de Git Bash con: `export PATH=$PATH:/c/Users/ezalazar/Tools/node/node-v24.16.0-win-x64` (o está en `.bashrc` si ya se configuró).
 - Rutas con espacios en Git Bash deben ir entre comillas: `cd "/c/EZ Developer/Rep/EZ Trader"`
 
 ---

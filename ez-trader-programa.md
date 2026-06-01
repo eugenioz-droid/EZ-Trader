@@ -66,19 +66,19 @@ BASE DE DATOS (Supabase)
 |------|----------------------------------------------------------|-----------|--------|
 | 3.0  | Instalar Node.js (portable) y agregarlo al PATH de Git Bash (PREREQUISITO)| ☑ | TÚ |
 | 3.1  | Setup inicial Next.js (estructura del proyecto)          | ☑        | YO     |
-| 3.2  | Configurar variables de entorno (Supabase, APIs externas)| ☑        | YO     |
-| 3.3  | Integrar fuente de noticias (RSS o API definida en 2.1)  | ☐        | YO     |
-| 3.4  | Integrar API financiera para cotización USD/CLP          | ☐        | YO     |
-| 3.5  | Integrar dato de mercado: Cobre [Tier 1]                 | ☐        | YO     |
-| 3.6  | Integrar dato de mercado: Dólar global DXY [Tier 1]      | ☐        | YO     |
+| 3.2  | Configurar variables de entorno + cliente Supabase       | ☑        | YO     |
+| 3.3  | Integrar fuente de noticias (Google News RSS)            | ☑        | YO     |
+| 3.4  | Integrar API financiera USD/CLP (Twelve Data)            | ☑        | YO     |
+| 3.5  | Integrar dato de mercado: Cobre (Yahoo Finance HG=F)     | ☑        | YO     |
+| 3.6  | Integrar dato de mercado: DXY (Yahoo Finance DX-Y.NYB)   | ☑        | YO     |
 | 3.7  | Integrar dato de mercado: Diferencial tasas TPM/Fed [Tier 1]| ☐     | YO     |
-| 3.8  | Crear endpoint GET /api/noticias (con filtros)           | ☐        | YO     |
-| 3.9  | Crear endpoint GET /api/cotizacion                       | ☐        | YO     |
-| 3.10 | Crear endpoint GET /api/datos-mercado (cobre, DXY, tasas)| ☐        | YO     |
+| 3.8  | Crear endpoint GET /api/noticias (con filtros)           | ☑        | YO     |
+| 3.9  | Crear endpoint GET /api/cotizacion                       | ☑        | YO     |
+| 3.10 | Crear endpoint GET /api/datos-mercado (cobre, DXY, tasas)| ☑        | YO     |
 | 3.11 | Crear endpoint GET /api/analisis-historico               | ☐        | YO     |
-| 3.12 | Crear Cron Job en Supabase (cada 15 min)                 | ☐        | YO     |
-| 3.13 | Guardar noticias, cotización y datos de mercado en BD    | ☐        | YO     |
-| 3.14 | Testing de endpoints y cron (verificar que funciona)     | ☐        | TÚ+YO  |
+| 3.12 | Configurar Cron Job (Supabase cada 15 min)               | ☐        | TÚ+YO  |
+| 3.13 | Guardar noticias, cotización y datos de mercado en BD    | ☑        | YO     |
+| 3.14 | Testing de endpoints y cron (verificar que funciona)     | ☑        | TÚ+YO  |
 | 3.15 | Crear motor de alertas por reglas (umbrales: cobre, DXY, precio, noticia alto impacto)| ☐ | YO |
 | 3.16 | Afinar cadencia de feeds críticos para ganar latencia al bróker| ☐  | TÚ+YO  |
 | 3.17 | [Post-MVP] Integrar dato de mercado: Petróleo [Tier 2]   | ☐        | YO     |

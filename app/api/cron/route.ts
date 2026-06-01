@@ -1,0 +1,40 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { obtenerNoticias, guardarNoticias } from '@/app/lib/noticias'
+import { obtenerPrecios, guardarPrecios } from '@/app/lib/mercado'
+
+// Clave secreta para que solo Supabase pueda llamar este endpoint
+const CRON_SECRET = process.env.CRON_SECRET
+
+export async function GET(req: NextRequest) {
+  // Verificar autorización
+  const authHeader = req.headers.get('authorization')
+  if (CRON_SECRET && authHeader !== `Bearer ${CRON_SECRET}`) {
+    return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
+  }
+
+  const inicio = Date.now()
+  const resultados: Record<string, unknown> = {}
+
+  // 1. Obtener y guardar noticias
+  try {
+    const noticias = await obtenerNoticias()
+    const guardadas = await guardarNoticias(noticias)
+    resultados.noticias = { obtenidas: noticias.length, guardadas }
+  } catch (err) {
+    resultados.noticias = { error: String(err) }
+  }
+
+  // 2. Obtener y guardar precios de mercado
+  try {
+    const precios = await obtenerPrecios()
+    const guardados = await guardarPrecios(precios)
+    resultados.precios = { obtenidos: precios.length, guardados, valores: precios.map(p => ({ serie: p.codigo_serie, valor: p.valor })) }
+  } catch (err) {
+    resultados.precios = { error: String(err) }
+  }
+
+  resultados.duracion_ms = Date.now() - inicio
+
+  console.log('Cron ejecutado:', JSON.stringify(resultados))
+  return NextResponse.json({ ok: true, ...resultados })
+}
