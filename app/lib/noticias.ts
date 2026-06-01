@@ -21,6 +21,13 @@ const FEEDS = [
     fuente_nombre: 'investingLive (ForexLive)',
     idioma: 'en'
   },
+  // BREAKING: temas que mueven el mercado, últimas horas, inglés (indexa en minutos)
+  {
+    nombre: 'Google News - Breaking mercados',
+    url: 'https://news.google.com/rss/search?q=(Fed+OR+Trump+OR+Iran+OR+tariffs+OR+oil+OR+China)+markets+when:3h&hl=en-US&gl=US&ceid=US:en',
+    fuente_nombre: 'Mercados Breaking (Google)',
+    idioma: 'en'
+  },
   // Google News (español, limitado a 7 días para frescura)
   {
     nombre: 'Google News - Dólar Peso Chileno',
