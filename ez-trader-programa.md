@@ -129,7 +129,7 @@ BASE DE DATOS (Supabase)
 | 5.7  | Testing del deploy: app, login, APIs y middleware        | ☑        | TÚ+YO  |
 | 5.8  | Actualizar URL del cron en Supabase al nuevo dominio     | ☑        | TÚ+YO  |
 | 5.9  | Monitoreo post-migración (logs, errores)                 | ☑        | TÚ+YO  |
-| 5.10 | Dar de baja Netlify                                      | ☐        | TÚ     |
+| 5.10 | Dar de baja Netlify                                      | ☑        | TÚ     |
 
 ---
 
@@ -148,19 +148,31 @@ BASE DE DATOS (Supabase)
 
 > Filas ordenadas por dependencia lógica. El bloque de setup + seguridad
 > (7.1, 7.10–7.13) es prerrequisito para exponer el agente sin riesgo de robo de tokens.
-> ⚠️ Proveedor de IA pendiente de confirmar: OpenAI tuvo problemas de pago con tarjetas
-> chilenas. Posible alternativa: Gemini (Google AI Studio, tiene tier gratis).
+> ✅ PROVEEDOR CONFIRMADO (2026-06-02): **Anthropic (Claude API)**. Cuenta pagada con
+> saldo inicial de US$5, límite mensual US$500 (se reinicia el 30). OpenAI descartado
+> (rechazó tarjetas chilenas).
+>
+> **Arquitectura de modelos (decidida 2026-06-02):**
+> - **Agente de estrategia (chat, día a día):** `claude-sonnet-4-6` — "power" para macro.
+> - **Análisis profundo (on-demand, botón):** `claude-opus-4-8` — el usuario decide cuándo
+>   gastar más (mejor para ponderar contradicciones, credibilidad de medios, difusión de noticias).
+> - **Clasificación de noticias (cron, Fase 8):** `claude-haiku-4-5-20251001` — ultra barato.
+> - El modelo de cada rol va en **variable de entorno** (no hardcodeado) para poder cambiarlo
+>   sin tocar código y para soportar selección por usuario en un futuro SaaS.
 
 | N°   | Descripción                                              | Realizado | Quién  |
 |------|----------------------------------------------------------|-----------|--------|
-| 7.1  | Confirmar proveedor de IA (OpenAI vs Gemini) y modelos   | ☐        | TÚ+YO  |
-| 7.10 | Configurar API key y variables de entorno (local + Cloudflare)| ☐   | TÚ+YO  |
+| 7.1  | Confirmar proveedor de IA → **Anthropic Claude** ✓       | ☑        | TÚ+YO  |
+| 7.10 | Configurar API key y variables de entorno (local ✓ / Cloudflare pendiente)| ☑* | TÚ+YO  |
 | 7.11 | Implementar auth gate: login + middleware ✓ (ya hecho)   | ☑        | YO     |
 | 7.12 | Configurar tope de gasto mensual en proveedor de IA      | ☐        | TÚ     |
-| 7.2  | Crear endpoint POST /api/consulta-agente                 | ☐        | YO     |
-| 7.13 | Agregar rate limiting + max_tokens + límite de input     | ☐        | YO     |
-| 7.3  | Diseñar prompt del agente (contexto + noticias del día)  | ☐        | TÚ+YO  |
-| 7.4  | Conectar chat del frontend con el agente                 | ☐        | YO     |
+| 7.14 | Modelo de cada rol en variable de entorno (no hardcode)  | ☑        | YO     |
+| 7.15 | Tabla de uso/costo de tokens (ledger 0005) + registrar cada llamada| ☑ | YO     |
+| 7.2  | Crear endpoint POST /api/consulta-agente (param profundidad: Sonnet/Opus)| ☑ | YO |
+| 7.13 | Agregar rate limiting + max_tokens + límite de input     | ☑        | YO     |
+| 7.3  | Diseñar prompt del agente (contexto + noticias del día) — v1| ☑     | TÚ+YO  |
+| 7.4  | Conectar chat del frontend con el agente                 | ☑        | YO     |
+| 7.16 | Botón "Análisis profundo" en el chat (dispara Opus)      | ☑        | YO     |
 | 7.5  | Guardar historial de conversaciones en BD                | ☐        | YO     |
 | 7.6  | Testing del agente (calidad de respuestas)               | ☐        | TÚ     |
 | 7.7  | Capacidad de planificación de estrategias (ver docs/estrategia.md)| ☐ | TÚ+YO |
@@ -185,6 +197,27 @@ BASE DE DATOS (Supabase)
 | 8.10 | Análisis de factor-noticia: Intervención BCCh [Tier 3]   | ☐        | YO     |
 | 8.11 | Análisis de factor-noticia: Política local/AFP [Tier 3]  | ☐        | YO     |
 | 8.12 | Análisis de factor-noticia: IPC Chile [Tier 3]           | ☐        | YO     |
+
+---
+
+## Fase 9: [FUTURO] Producto comercial multi-usuario (SaaS)
+
+> Visión a futuro (no se construye ahora). La herramienta personal y el producto comercial
+> son **el mismo código en distintas etapas** si se toman ciertas decisiones baratas desde ya.
+> Decidido 2026-06-02: priorizar 9.1 y 9.2 (costo bajo, evitan reescritura) aunque el SaaS
+> quede lejos. Mantener el descargo de "no es asesoría financiera" en todo (ver docs/estrategia.md).
+
+| N°   | Descripción                                              | Realizado | Quién  |
+|------|----------------------------------------------------------|-----------|--------|
+| 9.1  | [Puerta abierta] Modelo + estrategia/factores como config/data, no hardcode | ☐ | YO |
+| 9.2  | [Puerta abierta] Medir tokens/costo por llamada desde el día 1 (= tarea 7.15)| ☐ | YO |
+| 9.3  | Auth multi-usuario real (Supabase Auth) + RLS por usuario| ☐        | YO     |
+| 9.4  | Estrategias propias por usuario (factores/instrumentos/prompts configurables)| ☐ | YO |
+| 9.5  | Selección de modelo por usuario (ellos eligen Opus = pagan más)| ☐    | YO     |
+| 9.6  | Medición y cobro de tokens con margen (Stripe + topes por usuario)| ☐ | TÚ+YO |
+| 9.7  | Rate limiting + topes duros por usuario (anti-abuso de API key)| ☐    | YO     |
+| 9.8  | Términos de servicio + revisión legal (no asesoría financiera)| ☐     | TÚ     |
+| 9.9  | Ponderación de noticias por difusión/credibilidad del medio (señal pre-IA)| ☐ | YO |
 
 ---
 

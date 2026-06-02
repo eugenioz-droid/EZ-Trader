@@ -11,6 +11,10 @@ keep_vars = true
 [vars]
 NEXT_PUBLIC_SUPABASE_URL = "https://trjkxoixghsaivijnyiw.supabase.co"
 NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = "sb_publishable_QIPc86P_T_--IAMnktaGUQ_0CjcilOm"
+# Modelos de IA por rol (no son secretos — solo nombres de modelo).
+AGENTE_MODEL = "claude-sonnet-4-6"
+AGENTE_MODEL_PROFUNDO = "claude-opus-4-8"
+CLASIFICACION_MODEL = "claude-haiku-4-5-20251001"
 
 [assets]
 directory = ".open-next/assets"

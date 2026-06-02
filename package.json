@@ -11,6 +11,7 @@
     "deploy:cf": "opennextjs-cloudflare build && wrangler deploy"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.100.1",
     "@supabase/supabase-js": "^2.106.2",
     "next": "^15.5.18",
     "react": "19.0.0",
