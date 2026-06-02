@@ -3,12 +3,23 @@
 @tailwind utilities;
 
 :root {
-  --background: #0a0e1a;
-  --foreground: #e6e9ef;
+  --color-bg: #0D1117;
+  --color-bg-soft: #111827;
+  --color-green: #00FF7F;
+  --color-green-dark: #00B26A;
+  --color-silver: #DDE2E6;
+  --color-white: #F8FAFC;
+  --color-muted: #94A3B8;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
+  background: var(--color-bg);
+  color: var(--color-white);
   font-family: system-ui, -apple-system, sans-serif;
 }
+
+/* Scrollbars sobrios acordes a la paleta */
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: #0D1117; }
+::-webkit-scrollbar-thumb { background: #1F2A3C; border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: #2a3a52; }

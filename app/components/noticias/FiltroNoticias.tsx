@@ -27,8 +27,8 @@ export default function FiltroNoticias() {
           onClick={() => cambiarFiltro(f.valor)}
           className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
             actual === f.valor
-              ? 'border-blue-500 text-blue-400 bg-blue-900/30'
-              : 'border-gray-700 text-gray-500 hover:border-gray-500 hover:text-gray-300'
+              ? 'border-brand text-brand bg-brand/10'
+              : 'border-line text-muted hover:border-muted hover:text-silver'
           }`}
         >
           {f.label}

@@ -25,9 +25,27 @@ export default function GraficoInteractivo({ puntos, pines }: { puntos: Punto[];
 
   const ultimo = vs[vs.length - 1]
   const primero = vs[0]
-  const color = ultimo >= primero ? '#f87171' : '#4ade80'
+  const color = ultimo >= primero ? '#F6465D' : '#16C784'
 
-  const fmt = (t: number) => new Date(t).toLocaleString('es-CL', {
+  // Cuadrícula horaria adaptativa (paso según el lapso)
+  const spanH = span / 3600000
+  const stepH = spanH <= 18 ? 1 : spanH <= 40 ? 2 : spanH <= 80 ? 4 : 12
+  const ticks: number[] = []
+  const primerHora = new Date(t0)
+  primerHora.setMinutes(0, 0, 0)
+  let h = primerHora.getTime()
+  if (h < t0) h += 3600000
+  // alinear al paso
+  while (new Date(h).getHours() % stepH !== 0 && h <= t1) h += 3600000
+  for (; h <= t1; h += stepH * 3600000) ticks.push(h)
+  const labelEvery = Math.max(1, Math.ceil(ticks.length / 7))
+
+  const fmtHora = (t: number) => {
+    const d = new Date(t)
+    const hh = d.toLocaleString('es-CL', { timeZone: 'America/Santiago', hour: '2-digit', hour12: false })
+    return `${hh}h`
+  }
+  const fmtFull = (t: number) => new Date(t).toLocaleString('es-CL', {
     timeZone: 'America/Santiago', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
   })
 
@@ -45,24 +63,27 @@ export default function GraficoInteractivo({ puntos, pines }: { puntos: Punto[];
   const hxPct = hp ? (xOf(hp.t) / W) * 100 : 0
   const hyPct = hp ? (yOf(hp.v) / H) * 100 : 0
 
-  const ticks = Array.from({ length: 4 }, (_, i) => t0 + (i / 3) * span)
-
   return (
     <div>
       <div className="flex h-28">
         {/* Eje Y */}
-        <div className="w-12 flex flex-col justify-between items-end pr-1 text-[10px] text-gray-500 font-mono">
+        <div className="w-12 flex flex-col justify-between items-end pr-1 text-[10px] text-muted font-mono">
           <span>{max.toFixed(1)}</span>
-          <span className="text-gray-600">{mid.toFixed(1)}</span>
+          <span className="text-muted/70">{mid.toFixed(1)}</span>
           <span>{min.toFixed(1)}</span>
         </div>
 
         {/* Área de gráfico */}
         <div ref={ref} className="relative flex-1 cursor-crosshair" onMouseMove={onMove} onMouseLeave={() => setHover(null)}>
           <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-full" preserveAspectRatio="none">
-            <line x1="0" y1="0" x2={W} y2="0" stroke="#374151" strokeWidth="1" strokeDasharray="3 3" vectorEffect="non-scaling-stroke" opacity="0.4" />
-            <line x1="0" y1={H / 2} x2={W} y2={H / 2} stroke="#374151" strokeWidth="1" strokeDasharray="3 3" vectorEffect="non-scaling-stroke" opacity="0.4" />
-            <line x1="0" y1={H} x2={W} y2={H} stroke="#374151" strokeWidth="1" strokeDasharray="3 3" vectorEffect="non-scaling-stroke" opacity="0.4" />
+            {/* grilla horizontal */}
+            <line x1="0" y1="0" x2={W} y2="0" stroke="#1F2A3C" strokeWidth="1" strokeDasharray="3 3" vectorEffect="non-scaling-stroke" opacity="0.6" />
+            <line x1="0" y1={H / 2} x2={W} y2={H / 2} stroke="#1F2A3C" strokeWidth="1" strokeDasharray="3 3" vectorEffect="non-scaling-stroke" opacity="0.6" />
+            <line x1="0" y1={H} x2={W} y2={H} stroke="#1F2A3C" strokeWidth="1" strokeDasharray="3 3" vectorEffect="non-scaling-stroke" opacity="0.6" />
+            {/* grilla horaria vertical */}
+            {ticks.map((t, i) => (
+              <line key={i} x1={xOf(t)} y1="0" x2={xOf(t)} y2={H} stroke="#1F2A3C" strokeWidth="1" strokeDasharray="2 3" vectorEffect="non-scaling-stroke" opacity="0.4" />
+            ))}
             <polyline points={coords} fill="none" stroke={color} strokeWidth="2" vectorEffect="non-scaling-stroke" />
           </svg>
 
@@ -81,19 +102,19 @@ export default function GraficoInteractivo({ puntos, pines }: { puntos: Punto[];
           {/* Crosshair */}
           {hp && (
             <>
-              <div className="absolute top-0 h-full w-px bg-gray-300/50 pointer-events-none" style={{ left: `${hxPct}%` }} />
-              <div className="absolute w-2 h-2 rounded-full pointer-events-none ring-2 ring-gray-900" style={{ left: `${hxPct}%`, top: `${hyPct}%`, transform: 'translate(-50%,-50%)', backgroundColor: color }} />
+              <div className="absolute top-0 h-full w-px bg-silver/40 pointer-events-none" style={{ left: `${hxPct}%` }} />
+              <div className="absolute w-2 h-2 rounded-full pointer-events-none ring-2 ring-base" style={{ left: `${hxPct}%`, top: `${hyPct}%`, transform: 'translate(-50%,-50%)', backgroundColor: color }} />
               <div
-                className="absolute bg-gray-800 border border-gray-600 rounded px-1.5 py-0.5 text-[10px] text-gray-100 pointer-events-none whitespace-nowrap z-10"
+                className="absolute bg-elevated border border-line rounded px-1.5 py-0.5 text-[10px] text-snow pointer-events-none whitespace-nowrap z-10"
                 style={{ left: `${hxPct}%`, top: 0, transform: hxPct > 55 ? 'translateX(-105%)' : 'translateX(5%)' }}
               >
                 <span className="font-mono font-semibold" style={{ color }}>{hp.v.toFixed(1)}</span>
-                <span className="text-gray-400"> · {fmt(hp.t)}</span>
+                <span className="text-muted"> · {fmtFull(hp.t)}</span>
               </div>
             </>
           )}
 
-          {/* Valor actual (cuando no hay hover) */}
+          {/* Valor actual (sin hover) */}
           {!hp && (
             <span
               className="absolute right-1 text-[11px] font-mono font-semibold px-1 rounded pointer-events-none"
@@ -105,9 +126,22 @@ export default function GraficoInteractivo({ puntos, pines }: { puntos: Punto[];
         </div>
       </div>
 
-      {/* Eje X con varias marcas */}
-      <div className="flex justify-between text-[9px] text-gray-600 mt-1 pl-12">
-        {ticks.map((t, i) => <span key={i}>{fmt(t)}</span>)}
+      {/* Eje X: etiquetas por hora */}
+      <div className="flex mt-1">
+        <div className="w-12" />
+        <div className="relative flex-1 h-3">
+          {ticks.map((t, i) => (
+            i % labelEvery === 0 && (
+              <span
+                key={i}
+                className="absolute text-[9px] text-muted -translate-x-1/2 whitespace-nowrap"
+                style={{ left: `${(xOf(t) / W) * 100}%` }}
+              >
+                {fmtHora(t)}
+              </span>
+            )
+          ))}
+        </div>
       </div>
     </div>
   )

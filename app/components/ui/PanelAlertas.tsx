@@ -12,9 +12,9 @@ interface Alerta {
 }
 
 const COLORES: Record<string, string> = {
-  alta:  'text-red-400 border-red-800 bg-red-900/20',
-  media: 'text-yellow-400 border-yellow-800 bg-yellow-900/20',
-  baja:  'text-blue-400 border-blue-800 bg-blue-900/20',
+  alta:  'text-pesoDebil border-pesoDebil/50 bg-pesoDebil/10',
+  media: 'text-amber-400 border-amber-700 bg-amber-900/20',
+  baja:  'text-brand border-brandDark/50 bg-brandDark/10',
 }
 
 function tiempoRelativo(fecha: string): string {
@@ -47,7 +47,7 @@ export default function PanelAlertas() {
     <div className="relative">
       <button
         onClick={() => { setAbierto(!abierto); if (!abierto && sinLeer > 0) marcarLeidas() }}
-        className="relative flex items-center gap-1.5 text-xs text-gray-400 hover:text-white border border-gray-700 hover:border-gray-500 px-3 py-1.5 rounded-lg transition-colors"
+        className="relative flex items-center gap-1.5 text-xs text-muted hover:text-snow border border-line hover:border-muted px-3 py-1.5 rounded-lg transition-colors"
       >
         🔔
         {sinLeer > 0 && (
@@ -58,20 +58,20 @@ export default function PanelAlertas() {
       </button>
 
       {abierto && (
-        <div className="absolute right-0 top-10 w-80 bg-gray-900 border border-gray-700 rounded-xl shadow-2xl z-50">
-          <div className="px-4 py-3 border-b border-gray-700 flex items-center justify-between">
-            <span className="text-sm font-semibold text-gray-200">Alertas</span>
-            <button onClick={() => setAbierto(false)} className="text-gray-600 hover:text-gray-300 text-xs">✕</button>
+        <div className="absolute right-0 top-10 w-80 bg-panel border border-line rounded-xl shadow-2xl z-50">
+          <div className="px-4 py-3 border-b border-line flex items-center justify-between">
+            <span className="text-sm font-semibold text-silver">Alertas</span>
+            <button onClick={() => setAbierto(false)} className="text-muted hover:text-silver text-xs">✕</button>
           </div>
-          <div className="max-h-80 overflow-y-auto divide-y divide-gray-800">
+          <div className="max-h-80 overflow-y-auto divide-y divide-line">
             {alertas.length === 0 && (
-              <p className="px-4 py-6 text-sm text-gray-600 text-center">Sin alertas recientes</p>
+              <p className="px-4 py-6 text-sm text-muted text-center">Sin alertas recientes</p>
             )}
             {alertas.map(a => (
               <div key={a.id} className={`px-4 py-3 border-l-2 ${COLORES[a.severidad] ?? ''}`}>
-                <p className="text-sm font-medium text-gray-200">{a.titulo}</p>
-                {a.mensaje && <p className="text-xs text-gray-500 mt-0.5">{a.mensaje}</p>}
-                <p className="text-xs text-gray-600 mt-1">{tiempoRelativo(a.disparada_at)}</p>
+                <p className="text-sm font-medium text-silver">{a.titulo}</p>
+                {a.mensaje && <p className="text-xs text-muted mt-0.5">{a.mensaje}</p>}
+                <p className="text-xs text-muted mt-1">{tiempoRelativo(a.disparada_at)}</p>
               </div>
             ))}
           </div>

@@ -46,9 +46,9 @@ function calcularSesgo(factores: Awaited<ReturnType<typeof getFactores>>) {
     if (f.codigo === 'FED')   puntaje += f.variacion > 0 ? -1 : 1
   }
   if (total === 0) return null
-  if (puntaje >= 2)  return { texto: 'Factores alineados: PESO FUERTE', color: 'text-green-400', bg: 'bg-green-900/30' }
-  if (puntaje <= -2) return { texto: 'Factores alineados: PESO DÉBIL', color: 'text-red-400', bg: 'bg-red-900/30' }
-  return { texto: 'Factores mixtos · señal débil', color: 'text-yellow-400', bg: 'bg-yellow-900/20' }
+  if (puntaje >= 2)  return { texto: 'Factores alineados: PESO FUERTE', color: 'text-pesoFuerte', bg: 'bg-pesoFuerte/10 border border-pesoFuerte/30' }
+  if (puntaje <= -2) return { texto: 'Factores alineados: PESO DÉBIL', color: 'text-pesoDebil', bg: 'bg-pesoDebil/10 border border-pesoDebil/30' }
+  return { texto: 'Factores mixtos · señal débil', color: 'text-amber-400', bg: 'bg-amber-400/10 border border-amber-400/20' }
 }
 
 export default async function PanelFactores() {
@@ -57,11 +57,10 @@ export default async function PanelFactores() {
 
   return (
     <div className="px-4 py-4">
-      <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+      <h2 className="text-xs font-semibold text-muted uppercase tracking-wider mb-3">
         Factores de mercado
       </h2>
 
-      {/* Indicador de alineación */}
       {sesgo && (
         <div className={`${sesgo.bg} rounded-lg px-3 py-2 mb-4`}>
           <span className={`text-xs font-semibold ${sesgo.color}`}>{sesgo.texto}</span>
@@ -78,17 +77,17 @@ export default async function PanelFactores() {
           return (
             <div key={f.codigo} className="flex items-center justify-between">
               <div>
-                <span className="text-sm text-gray-300">{f.nombre}</span>
-                {dir && <p className="text-xs text-gray-600">{dir}</p>}
+                <span className="text-sm text-silver">{f.nombre}</span>
+                {dir && <p className="text-xs text-muted">{dir}</p>}
               </div>
               <div className="text-right">
-                <span className="text-sm font-mono text-gray-200">
+                <span className="text-sm font-mono text-snow">
                   {f.valor !== null
                     ? `${f.valor.toLocaleString('es-CL', { maximumFractionDigits: 3 })} ${f.unidad ?? ''}`
                     : '—'}
                 </span>
                 {f.variacion !== null && (
-                  <p className={`text-xs ${f.variacion > 0 ? 'text-blue-400' : 'text-orange-400'}`}>
+                  <p className={`text-xs ${f.variacion > 0 ? 'text-pesoDebil' : 'text-pesoFuerte'}`}>
                     {f.variacion > 0 ? '▲' : '▼'} {Math.abs(f.variacion).toFixed(2)}%
                   </p>
                 )}

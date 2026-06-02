@@ -8,6 +8,7 @@ import BotonRefresh from './components/ui/BotonRefresh'
 import BotonBriefing from './components/ui/BotonBriefing'
 import UltimaActualizacion from './components/ui/UltimaActualizacion'
 import PanelAlertas from './components/ui/PanelAlertas'
+import Logo from './components/ui/Logo'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,16 +17,16 @@ export default async function Home({
 }: {
   searchParams: Promise<{ fuente?: string }>
 }) {
-  const { fuente } = await searchParams
+  await searchParams
 
   return (
-    <div className="min-h-screen bg-gray-950 text-gray-100">
+    <div className="min-h-screen bg-base text-snow">
 
       {/* Header */}
-      <header className="border-b border-gray-800 px-4 lg:px-6 py-3 flex items-center justify-between gap-2">
-        <div className="flex items-center gap-2 lg:gap-3 shrink-0">
-          <span className="text-lg lg:text-xl font-bold tracking-tight">EZ Trader</span>
-          <span className="text-xs bg-blue-900 text-blue-300 px-2 py-0.5 rounded-full">USD/CLP</span>
+      <header className="border-b border-line bg-panel px-4 lg:px-6 py-3 flex items-center justify-between gap-2">
+        <div className="flex items-center gap-3 shrink-0">
+          <Logo />
+          <span className="text-xs bg-brandDark/15 text-brand px-2 py-0.5 rounded-full border border-brandDark/30">USD/CLP</span>
         </div>
         <div className="flex items-center gap-2 lg:gap-3 flex-wrap justify-end">
           <Suspense fallback={null}>
@@ -34,27 +35,27 @@ export default async function Home({
           <PanelAlertas />
           <BotonBriefing />
           <BotonRefresh />
-          <div className="hidden sm:flex items-center gap-2 text-xs text-gray-500">
-            <span className="h-2 w-2 rounded-full bg-green-500 animate-pulse"></span>
+          <div className="hidden sm:flex items-center gap-2 text-xs text-muted">
+            <span className="h-2 w-2 rounded-full bg-brand animate-pulse"></span>
             En vivo · cada 15 min
           </div>
         </div>
       </header>
 
       {/* Tabs */}
-      <div className="border-b border-gray-800 px-4 lg:px-6">
+      <div className="border-b border-line px-4 lg:px-6 bg-panel/50">
         <nav className="flex gap-1">
-          <button className="px-4 py-2 text-sm border-b-2 border-blue-500 text-blue-400 font-medium">
+          <button className="px-4 py-2 text-sm border-b-2 border-brand text-brand font-medium">
             USD / CLP
           </button>
-          <button className="px-4 py-2 text-sm text-gray-500 cursor-not-allowed" disabled>
+          <button className="px-4 py-2 text-sm text-muted cursor-not-allowed" disabled>
             + Instrumento
           </button>
         </nav>
       </div>
 
       {/* Móvil: cotización primero */}
-      <div className="lg:hidden border-b border-gray-800">
+      <div className="lg:hidden border-b border-line">
         <Suspense fallback={<CargandoPanel texto="Cargando mercado..." />}>
           <PanelCotizacion />
         </Suspense>
@@ -69,15 +70,15 @@ export default async function Home({
       {/* Layout principal */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-0 lg:h-[calc(100vh-89px)]">
 
-        {/* Columna izquierda: Noticias */}
-        <div className="lg:col-span-1 border-r border-gray-800 lg:overflow-y-auto">
+        {/* Noticias */}
+        <div className="lg:col-span-1 border-r border-line lg:overflow-y-auto">
           <Suspense fallback={<CargandoPanel texto="Cargando noticias..." />}>
-            <PanelNoticias fuente={fuente} />
+            <PanelNoticias />
           </Suspense>
         </div>
 
-        {/* Columna central: Cotización + Gráfico + Factores (solo desktop) */}
-        <div className="hidden lg:block lg:col-span-1 border-r border-gray-800 overflow-y-auto">
+        {/* Cotización + Gráfico + Factores (desktop) */}
+        <div className="hidden lg:block lg:col-span-1 border-r border-line overflow-y-auto">
           <Suspense fallback={<CargandoPanel texto="Cargando mercado..." />}>
             <PanelCotizacion />
           </Suspense>
@@ -89,8 +90,8 @@ export default async function Home({
           </Suspense>
         </div>
 
-        {/* Columna derecha: Agente */}
-        <div className="lg:col-span-1 lg:overflow-y-auto border-t lg:border-t-0 border-gray-800">
+        {/* Agente */}
+        <div className="lg:col-span-1 lg:overflow-y-auto border-t lg:border-t-0 border-line">
           <PanelAgente />
         </div>
 
@@ -101,7 +102,7 @@ export default async function Home({
 
 function CargandoPanel({ texto }: { texto: string }) {
   return (
-    <div className="flex items-center justify-center h-32 text-gray-600 text-sm">
+    <div className="flex items-center justify-center h-32 text-muted text-sm">
       <span className="animate-pulse">{texto}</span>
     </div>
   )

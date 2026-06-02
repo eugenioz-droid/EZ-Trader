@@ -37,27 +37,27 @@ export default async function PanelCotizacion() {
     : null
 
   return (
-    <div className="border-b border-gray-800 px-4 py-4">
+    <div className="border-b border-line px-4 py-4">
       <div className="flex items-center justify-between mb-3">
-        <h2 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+        <h2 className="text-xs font-semibold text-muted uppercase tracking-wider">
           Cotización
         </h2>
         {horaActualizacion && (
-          <span className="text-xs text-gray-600">Actualizado {horaActualizacion} (Santiago)</span>
+          <span className="text-xs text-muted">Actualizado {horaActualizacion} (Santiago)</span>
         )}
       </div>
 
       {!actual ? (
-        <p className="text-sm text-gray-600">Sin datos aún</p>
+        <p className="text-sm text-muted">Sin datos aún</p>
       ) : (
         <div className="flex items-end gap-3">
-          <span className="text-4xl font-bold tracking-tight">
+          <span className="text-4xl font-bold tracking-tight text-snow">
             {actual.valor.toLocaleString('es-CL', { maximumFractionDigits: 1 })}
           </span>
           <div className="mb-1">
-            <span className="text-sm text-gray-500">CLP</span>
+            <span className="text-sm text-muted">CLP</span>
             {variacion !== null && (
-              <div className={`text-sm font-medium ${subiendo ? 'text-red-400' : 'text-green-400'}`}>
+              <div className={`text-sm font-medium ${subiendo ? 'text-pesoDebil' : 'text-pesoFuerte'}`}>
                 {subiendo ? '▲' : '▼'} {Math.abs(variacion).toFixed(2)}%
               </div>
             )}

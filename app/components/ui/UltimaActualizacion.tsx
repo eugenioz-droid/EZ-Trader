@@ -20,8 +20,8 @@ export default async function UltimaActualizacion() {
   })
 
   return (
-    <span className="text-xs text-gray-600">
-      Última actualización: <span className="text-gray-400">{hora}</span>
+    <span className="text-xs text-muted">
+      Última actualización: <span className="text-silver">{hora}</span>
     </span>
   )
 }

@@ -27,7 +27,7 @@ export default function BotonBriefing() {
       onClick={descargar}
       disabled={cargando}
       title="Descarga un resumen para pegar en ChatGPT"
-      className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-white border border-gray-700 hover:border-gray-500 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50"
+      className="flex items-center gap-1.5 text-xs text-brand hover:text-snow border border-brandDark/40 hover:border-brand px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50"
     >
       📄 {cargando ? 'Generando...' : 'Briefing para GPT'}
     </button>

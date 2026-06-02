@@ -21,7 +21,7 @@ export default function BotonRefresh() {
     <button
       onClick={handleRefresh}
       disabled={cargando}
-      className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-white border border-gray-700 hover:border-gray-500 px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+      className="flex items-center gap-1.5 text-xs text-muted hover:text-snow border border-line hover:border-muted px-3 py-1.5 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
     >
       <span className={cargando ? 'animate-spin' : ''}>↻</span>
       {cargando ? 'Actualizando...' : 'Actualizar ahora'}

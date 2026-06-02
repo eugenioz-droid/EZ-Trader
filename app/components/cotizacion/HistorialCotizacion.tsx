@@ -51,6 +51,12 @@ export default async function HistorialCotizacion() {
   const t0 = puntosClient[0].t
   const t1 = puntosClient[puntosClient.length - 1].t
 
+  const fmtDia = (t: number) => new Date(t).toLocaleDateString('es-CL', {
+    timeZone: 'America/Santiago', day: '2-digit', month: '2-digit'
+  })
+  const mismaFecha = new Date(t0).toDateString() === new Date(t1).toDateString()
+  const rangoLabel = mismaFecha ? fmtDia(t0) : `${fmtDia(t0)} – ${fmtDia(t1)}`
+
   // Pines: keyword match + espaciado mínimo para no saturar
   const candidatos = (noticias ?? [])
     .filter(n => n.publicado_at && KEYWORDS.test(n.titulo))
@@ -69,10 +75,10 @@ export default async function HistorialCotizacion() {
   return (
     <div className="px-4 py-4 border-b border-gray-800">
       <div className="flex items-center justify-between mb-2">
-        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-          Historial USD/CLP · 3 días
+        <h3 className="text-xs font-semibold text-muted uppercase tracking-wider">
+          Historial USD/CLP · {rangoLabel}
         </h3>
-        <span className="text-xs text-gray-600">
+        <span className="text-xs text-muted">
           {puntos.length} pts · <span className="text-amber-400">▲</span> {pines.length}
         </span>
       </div>
