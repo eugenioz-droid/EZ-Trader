@@ -6,6 +6,7 @@ const RUTAS_PUBLICAS = [
   '/login',
   '/api/auth',
   '/api/cron',
+  '/api/debug',   // TEMPORAL — diagnóstico de env vars, borrar después
 ]
 
 export function middleware(req: NextRequest) {
