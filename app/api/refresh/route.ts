@@ -1,17 +1,36 @@
-import { NextRequest, NextResponse } from 'next/server'
+import { NextResponse } from 'next/server'
+import { obtenerNoticias, guardarNoticias } from '@/app/lib/noticias'
+import { obtenerPrecios, guardarPrecios } from '@/app/lib/mercado'
+import { evaluarAlertas } from '@/app/lib/alertas'
 
-// Endpoint público que dispara el cron internamente
-// No expone el CRON_SECRET al frontend
-export async function POST(req: NextRequest) {
-  const host = req.headers.get('host') ?? 'localhost:3000'
-  const protocol = host.includes('localhost') ? 'http' : 'https'
+// En Cloudflare Workers el self-fetch falla, así que llamamos las funciones directamente.
+export async function POST() {
+  const inicio = Date.now()
+  const resultados: Record<string, unknown> = {}
 
-  const res = await fetch(`${protocol}://${host}/api/cron`, {
-    headers: {
-      Authorization: `Bearer ${process.env.CRON_SECRET}`
-    }
-  })
+  try {
+    const noticias = await obtenerNoticias()
+    const guardadas = await guardarNoticias(noticias)
+    resultados.noticias = { obtenidas: noticias.length, guardadas }
+  } catch (err) {
+    resultados.noticias = { error: String(err) }
+  }
 
-  const data = await res.json()
-  return NextResponse.json(data)
+  try {
+    const precios = await obtenerPrecios()
+    const guardados = await guardarPrecios(precios)
+    resultados.precios = { obtenidos: precios.length, guardados }
+  } catch (err) {
+    resultados.precios = { error: String(err) }
+  }
+
+  try {
+    const alertasNuevas = await evaluarAlertas()
+    resultados.alertas = { nuevas: alertasNuevas }
+  } catch (err) {
+    resultados.alertas = { error: String(err) }
+  }
+
+  resultados.duracion_ms = Date.now() - inicio
+  return NextResponse.json({ ok: true, ...resultados })
 }

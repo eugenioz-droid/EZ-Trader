@@ -37,30 +37,14 @@ export default async function Home({
         {/* Fade izquierda para proteger legibilidad del logo */}
         <div className="absolute inset-0 bg-gradient-to-r from-base via-base/85 to-transparent pointer-events-none" />
 
-        {/* Content */}
-        <div className="relative z-10 h-full flex items-center justify-between px-4 lg:px-6 gap-2">
-          <div className="flex items-center gap-3 shrink-0">
-            <Logo />
-            <span className="text-xs bg-brandDark/15 text-brand px-2 py-0.5 rounded-full border border-brandDark/30">USD/CLP</span>
-          </div>
-          <div className="flex items-center gap-2 lg:gap-3 flex-wrap justify-end">
-            <Suspense fallback={null}>
-              <UltimaActualizacion />
-            </Suspense>
-            <PanelAlertas />
-            <BotonBriefing />
-            <BotonRefresh />
-            <div className="hidden sm:flex items-center gap-2 text-xs text-muted">
-              <span className="h-2 w-2 rounded-full bg-brand animate-pulse"></span>
-              En vivo · cada 15 min
-            </div>
-            <BotonLogout />
-          </div>
+        {/* Content — solo el logo */}
+        <div className="relative z-10 h-full flex items-center px-4 lg:px-6">
+          <Logo />
         </div>
       </header>
 
-      {/* Tabs */}
-      <div className="border-b border-line px-4 lg:px-6 bg-panel/50">
+      {/* Tabs + controles */}
+      <div className="border-b border-line px-4 lg:px-6 bg-panel/50 flex items-center justify-between">
         <nav className="flex gap-1">
           <button className="px-4 py-2 text-sm border-b-2 border-brand text-brand font-medium">
             USD / CLP
@@ -69,6 +53,19 @@ export default async function Home({
             + Instrumento
           </button>
         </nav>
+        <div className="flex items-center gap-2 lg:gap-3 py-1">
+          <Suspense fallback={null}>
+            <UltimaActualizacion />
+          </Suspense>
+          <PanelAlertas />
+          <BotonBriefing />
+          <BotonRefresh />
+          <div className="hidden sm:flex items-center gap-2 text-xs text-muted">
+            <span className="h-2 w-2 rounded-full bg-brand animate-pulse"></span>
+            En vivo · cada 15 min
+          </div>
+          <BotonLogout />
+        </div>
       </div>
 
       {/* Móvil: cotización primero */}
@@ -85,7 +82,7 @@ export default async function Home({
       </div>
 
       {/* Layout principal */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-0 lg:h-[calc(100vh-158px)]">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-0 lg:h-[calc(100vh-162px)]">
 
         {/* Noticias */}
         <div className="lg:col-span-1 border-r border-line lg:overflow-y-auto">
