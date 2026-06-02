@@ -1,22 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { COOKIE_NAME, SESSION_MAX_AGE } from '@/app/lib/auth'
 
-async function getCfEnv(): Promise<Record<string, string>> {
-  try {
-    const { getCloudflareContext } = await import('@opennextjs/cloudflare')
-    const { env } = await getCloudflareContext({ async: true })
-    return env as Record<string, string>
-  } catch {
-    return {}
-  }
-}
-
 export async function POST(req: NextRequest) {
   const { password } = await req.json().catch(() => ({ password: '' }))
 
-  const cfEnv = await getCfEnv()
-  const esperado = cfEnv.APP_PASSWORD || process.env.APP_PASSWORD
-  const secret   = cfEnv.AUTH_SECRET  || process.env.AUTH_SECRET
+  const esperado = process.env.APP_PASSWORD
+  const secret = process.env.AUTH_SECRET
 
   if (!esperado || !secret) {
     return NextResponse.json(
