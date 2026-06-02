@@ -37,16 +37,35 @@ function LoginForm() {
   }
 
   return (
-    <div className="min-h-screen bg-base text-snow flex items-center justify-center px-4">
-      <div className="w-full max-w-sm">
+    <div className="relative min-h-screen bg-base text-snow overflow-hidden">
+      {/* Fondo mapamundi (mismo del banner) — globo hacia la derecha */}
+      <div
+        className="absolute inset-0 bg-no-repeat"
+        style={{
+          backgroundImage: "url('/fondo-globo.png')",
+          backgroundSize: 'cover',
+          backgroundPosition: 'right center',
+        }}
+      />
+      {/* Gradiente: oscurece izquierda/centro para que el logo se funda sin rectángulo */}
+      <div className="absolute inset-0 bg-gradient-to-r from-base via-base/75 to-transparent" />
+
+      <div className="relative z-10 min-h-screen flex flex-col items-center justify-center px-4">
         <div className="flex flex-col items-center mb-8">
-          <Image src="/logo.png" alt="EZ Trader" width={130} height={130} priority className="object-contain" />
-          <div className="text-[10px] tracking-[0.22em] text-brandDark font-semibold mt-3">
+          <Image
+            src="/logo.png"
+            alt="EZ Trader"
+            width={260}
+            height={260}
+            priority
+            className="object-contain w-48 h-48 lg:w-64 lg:h-64 drop-shadow-[0_0_25px_rgba(0,255,127,0.15)]"
+          />
+          <div className="text-[11px] tracking-[0.25em] text-brandDark font-semibold mt-1">
             TRADE SMART. GROW CONFIDENT.
           </div>
         </div>
 
-        <form onSubmit={onSubmit} className="bg-panel border border-line rounded-2xl p-6 shadow-lg">
+        <form onSubmit={onSubmit} className="w-full max-w-sm bg-panel/80 backdrop-blur-sm border border-line rounded-2xl p-6 shadow-2xl">
           <label className="block text-xs font-semibold text-muted uppercase tracking-wider mb-2">
             Acceso privado
           </label>
@@ -62,7 +81,7 @@ function LoginForm() {
           <button
             type="submit"
             disabled={cargando || !password}
-            className="w-full mt-4 bg-brand text-base font-semibold rounded-lg py-2.5 hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed transition"
+            className="w-full mt-4 bg-brand text-[#0D1117] font-semibold rounded-lg py-2.5 hover:brightness-110 disabled:opacity-50 disabled:cursor-not-allowed transition"
           >
             {cargando ? 'Entrando…' : 'Entrar'}
           </button>
