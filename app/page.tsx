@@ -54,16 +54,16 @@ export default async function Home({
           </button>
         </nav>
         <div className="flex items-center gap-2 lg:gap-3 py-1">
+          <div className="hidden sm:flex items-center gap-1.5 text-xs text-muted">
+            <span className="h-2 w-2 rounded-full bg-brand animate-pulse"></span>
+            En vivo · cada 15 min
+          </div>
           <Suspense fallback={null}>
             <UltimaActualizacion />
           </Suspense>
           <PanelAlertas />
           <BotonBriefing />
           <BotonRefresh />
-          <div className="hidden sm:flex items-center gap-2 text-xs text-muted">
-            <span className="h-2 w-2 rounded-full bg-brand animate-pulse"></span>
-            En vivo · cada 15 min
-          </div>
           <BotonLogout />
         </div>
       </div>

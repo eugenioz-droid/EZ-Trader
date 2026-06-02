@@ -14,9 +14,10 @@ export default function BotonLogout() {
     <button
       onClick={logout}
       title="Cerrar sesión"
-      className="text-muted hover:text-snow transition text-xs px-2 py-1 rounded border border-transparent hover:border-line"
+      className="flex items-center gap-1.5 text-xs text-brand hover:text-snow border border-brandDark/40 hover:border-brand px-3 py-1.5 rounded-lg transition-colors"
     >
       ⎋ Salir
+
     </button>
   )
 }
