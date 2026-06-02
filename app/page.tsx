@@ -81,18 +81,18 @@ export default async function Home({
         </Suspense>
       </div>
 
-      {/* Layout principal */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-0 lg:h-[calc(100vh-162px)]">
+      {/* Layout principal — el gráfico/mercado es el centro analítico (más ancho) */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-0 lg:h-[calc(100vh-162px)]">
 
-        {/* Noticias */}
-        <div className="lg:col-span-1 border-r border-line lg:overflow-y-auto">
+        {/* Noticias (más angosto — Haiku las filtrará en Fase 8) */}
+        <div className="lg:col-span-3 border-r border-line lg:overflow-y-auto">
           <Suspense fallback={<CargandoPanel texto="Cargando noticias..." />}>
             <PanelNoticias />
           </Suspense>
         </div>
 
-        {/* Cotización + Gráfico + Factores (desktop) */}
-        <div className="hidden lg:block lg:col-span-1 border-r border-line overflow-y-auto">
+        {/* Cotización + Gráfico + Factores (desktop) — columna principal */}
+        <div className="hidden lg:block lg:col-span-6 border-r border-line overflow-y-auto">
           <Suspense fallback={<CargandoPanel texto="Cargando mercado..." />}>
             <PanelCotizacion />
           </Suspense>
@@ -105,7 +105,7 @@ export default async function Home({
         </div>
 
         {/* Agente */}
-        <div className="lg:col-span-1 lg:overflow-y-auto border-t lg:border-t-0 border-line">
+        <div className="lg:col-span-3 lg:overflow-y-auto border-t lg:border-t-0 border-line">
           <PanelAgente />
         </div>
 

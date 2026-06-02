@@ -4,46 +4,92 @@ import { useState, useRef } from 'react'
 
 interface Punto { t: number; v: number }
 interface Pin { t: number; titulo: string }
+export interface SerieGrafico {
+  codigo: string
+  label: string
+  color: string
+  puntos: Punto[]
+}
 
-export default function GraficoInteractivo({ puntos, pines }: { puntos: Punto[]; pines: Pin[] }) {
+const W = 300, H = 100
+
+// Punto más cercano (por tiempo) dentro de una serie.
+function cercano(puntos: Punto[], t: number): Punto | null {
+  if (puntos.length === 0) return null
+  let best = puntos[0], bd = Infinity
+  for (const p of puntos) {
+    const d = Math.abs(p.t - t)
+    if (d < bd) { bd = d; best = p }
+  }
+  return best
+}
+
+export default function GraficoInteractivo({
+  series,
+  pines,
+}: {
+  series: SerieGrafico[]
+  pines: Pin[]
+}) {
   const [hover, setHover] = useState<number | null>(null)
   const ref = useRef<HTMLDivElement>(null)
 
-  const vs = puntos.map(p => p.v)
-  const min = Math.min(...vs)
-  const max = Math.max(...vs)
-  const mid = (min + max) / 2
-  const rango = max - min || 1
-  const t0 = puntos[0].t
-  const t1 = puntos[puntos.length - 1].t
+  const base = series[0]
+  if (!base || base.puntos.length < 2) {
+    return <div className="h-28 flex items-center justify-center text-xs text-muted">Sin datos suficientes</div>
+  }
+
+  // Rango temporal: unión de todas las series
+  let t0 = Infinity, t1 = -Infinity
+  for (const s of series) {
+    for (const p of s.puntos) {
+      if (p.t < t0) t0 = p.t
+      if (p.t > t1) t1 = p.t
+    }
+  }
   const span = t1 - t0 || 1
 
-  const W = 300, H = 100
+  // Normalización por serie (cada una a su propio min/max → se ven divergencias de forma)
+  const escala = new Map<string, { min: number; rango: number }>()
+  for (const s of series) {
+    const vs = s.puntos.map((p) => p.v)
+    const min = Math.min(...vs)
+    const max = Math.max(...vs)
+    escala.set(s.codigo, { min, rango: max - min || 1 })
+  }
+
   const xOf = (t: number) => ((t - t0) / span) * W
-  const yOf = (v: number) => (1 - (v - min) / rango) * H
-  const coords = puntos.map(p => `${xOf(p.t).toFixed(1)},${yOf(p.v).toFixed(1)}`).join(' ')
+  const yOf = (v: number, codigo: string) => {
+    const e = escala.get(codigo)!
+    return (1 - (v - e.min) / e.rango) * H
+  }
 
-  const ultimo = vs[vs.length - 1]
-  const primero = vs[0]
-  const color = ultimo >= primero ? '#F6465D' : '#16C784'
+  const baseVs = base.puntos.map((p) => p.v)
+  const baseUltimo = baseVs[baseVs.length - 1]
 
-  // Cuadrícula horaria adaptativa (paso según el lapso)
-  const spanH = span / 3600000
-  const stepH = spanH <= 18 ? 1 : spanH <= 40 ? 2 : spanH <= 80 ? 4 : 12
+  // Ejes de tiempo adaptativos
+  const spanD = span / 86400000
   const ticks: number[] = []
-  const primerHora = new Date(t0)
-  primerHora.setMinutes(0, 0, 0)
-  let h = primerHora.getTime()
-  if (h < t0) h += 3600000
-  // alinear al paso
-  while (new Date(h).getHours() % stepH !== 0 && h <= t1) h += 3600000
-  for (; h <= t1; h += stepH * 3600000) ticks.push(h)
+  if (spanD <= 2) {
+    // por horas
+    const stepH = spanD <= 0.8 ? 1 : 2
+    const d = new Date(t0); d.setMinutes(0, 0, 0)
+    let h = d.getTime(); if (h < t0) h += 3600000
+    for (; h <= t1; h += stepH * 3600000) ticks.push(h)
+  } else {
+    // por días
+    const stepD = spanD <= 10 ? 1 : spanD <= 35 ? 5 : 14
+    const d = new Date(t0); d.setHours(0, 0, 0, 0)
+    let day = d.getTime(); if (day < t0) day += 86400000
+    for (; day <= t1; day += stepD * 86400000) ticks.push(day)
+  }
   const labelEvery = Math.max(1, Math.ceil(ticks.length / 7))
-
-  const fmtHora = (t: number) => {
+  const fmtTick = (t: number) => {
     const d = new Date(t)
-    const hh = d.toLocaleString('es-CL', { timeZone: 'America/Santiago', hour: '2-digit', hour12: false })
-    return `${hh}h`
+    if (spanD <= 2) {
+      return `${d.toLocaleString('es-CL', { timeZone: 'America/Santiago', hour: '2-digit', hour12: false })}h`
+    }
+    return d.toLocaleDateString('es-CL', { timeZone: 'America/Santiago', day: '2-digit', month: '2-digit' })
   }
   const fmtFull = (t: number) => new Date(t).toLocaleString('es-CL', {
     timeZone: 'America/Santiago', day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit'
@@ -55,36 +101,47 @@ export default function GraficoInteractivo({ puntos, pines }: { puntos: Punto[];
     const x = (e.clientX - rect.left) / rect.width
     const tt = t0 + x * span
     let best = 0, bd = Infinity
-    puntos.forEach((p, i) => { const d = Math.abs(p.t - tt); if (d < bd) { bd = d; best = i } })
+    base.puntos.forEach((p, i) => { const d = Math.abs(p.t - tt); if (d < bd) { bd = d; best = i } })
     setHover(best)
   }
 
-  const hp = hover !== null ? puntos[hover] : null
+  const hp = hover !== null ? base.puntos[hover] : null
   const hxPct = hp ? (xOf(hp.t) / W) * 100 : 0
-  const hyPct = hp ? (yOf(hp.v) / H) * 100 : 0
+  const hyPct = hp ? (yOf(hp.v, base.codigo) / H) * 100 : 0
 
   return (
     <div>
-      <div className="flex h-28">
-        {/* Eje Y */}
+      <div className="flex h-40">
+        {/* Eje Y: valores de la serie base (USD/CLP) */}
         <div className="w-12 flex flex-col justify-between items-end pr-1 text-[10px] text-muted font-mono">
-          <span>{max.toFixed(1)}</span>
-          <span className="text-muted/70">{mid.toFixed(1)}</span>
-          <span>{min.toFixed(1)}</span>
+          <span>{(escala.get(base.codigo)!.min + escala.get(base.codigo)!.rango).toFixed(1)}</span>
+          <span className="text-muted/70">{(escala.get(base.codigo)!.min + escala.get(base.codigo)!.rango / 2).toFixed(1)}</span>
+          <span>{escala.get(base.codigo)!.min.toFixed(1)}</span>
         </div>
 
         {/* Área de gráfico */}
         <div ref={ref} className="relative flex-1 cursor-crosshair" onMouseMove={onMove} onMouseLeave={() => setHover(null)}>
           <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-full" preserveAspectRatio="none">
             {/* grilla horizontal */}
-            <line x1="0" y1="0" x2={W} y2="0" stroke="#1F2A3C" strokeWidth="1" strokeDasharray="3 3" vectorEffect="non-scaling-stroke" opacity="0.6" />
-            <line x1="0" y1={H / 2} x2={W} y2={H / 2} stroke="#1F2A3C" strokeWidth="1" strokeDasharray="3 3" vectorEffect="non-scaling-stroke" opacity="0.6" />
-            <line x1="0" y1={H} x2={W} y2={H} stroke="#1F2A3C" strokeWidth="1" strokeDasharray="3 3" vectorEffect="non-scaling-stroke" opacity="0.6" />
-            {/* grilla horaria vertical */}
+            {[0, H / 2, H].map((y, i) => (
+              <line key={i} x1="0" y1={y} x2={W} y2={y} stroke="#1F2A3C" strokeWidth="1" strokeDasharray="3 3" vectorEffect="non-scaling-stroke" opacity="0.6" />
+            ))}
+            {/* grilla temporal vertical */}
             {ticks.map((t, i) => (
               <line key={i} x1={xOf(t)} y1="0" x2={xOf(t)} y2={H} stroke="#1F2A3C" strokeWidth="1" strokeDasharray="2 3" vectorEffect="non-scaling-stroke" opacity="0.4" />
             ))}
-            <polyline points={coords} fill="none" stroke={color} strokeWidth="2" vectorEffect="non-scaling-stroke" />
+            {/* una polilínea por serie */}
+            {series.map((s) => (
+              <polyline
+                key={s.codigo}
+                points={s.puntos.map((p) => `${xOf(p.t).toFixed(1)},${yOf(p.v, s.codigo).toFixed(1)}`).join(' ')}
+                fill="none"
+                stroke={s.color}
+                strokeWidth={s.codigo === base.codigo ? 2 : 1.5}
+                strokeOpacity={s.codigo === base.codigo ? 1 : 0.85}
+                vectorEffect="non-scaling-stroke"
+              />
+            ))}
           </svg>
 
           {/* Pines de noticias */}
@@ -103,41 +160,48 @@ export default function GraficoInteractivo({ puntos, pines }: { puntos: Punto[];
           {hp && (
             <>
               <div className="absolute top-0 h-full w-px bg-silver/40 pointer-events-none" style={{ left: `${hxPct}%` }} />
-              <div className="absolute w-2 h-2 rounded-full pointer-events-none ring-2 ring-base" style={{ left: `${hxPct}%`, top: `${hyPct}%`, transform: 'translate(-50%,-50%)', backgroundColor: color }} />
+              <div className="absolute w-2 h-2 rounded-full pointer-events-none ring-2 ring-base" style={{ left: `${hxPct}%`, top: `${hyPct}%`, transform: 'translate(-50%,-50%)', backgroundColor: base.color }} />
               <div
-                className="absolute bg-elevated border border-line rounded px-1.5 py-0.5 text-[10px] text-snow pointer-events-none whitespace-nowrap z-10"
+                className="absolute bg-elevated border border-line rounded px-1.5 py-1 text-[10px] text-snow pointer-events-none whitespace-nowrap z-10 space-y-0.5"
                 style={{ left: `${hxPct}%`, top: 0, transform: hxPct > 55 ? 'translateX(-105%)' : 'translateX(5%)' }}
               >
-                <span className="font-mono font-semibold" style={{ color }}>{hp.v.toFixed(1)}</span>
-                <span className="text-muted"> · {fmtFull(hp.t)}</span>
+                <div className="text-muted">{fmtFull(hp.t)}</div>
+                {series.map((s) => {
+                  const c = cercano(s.puntos, hp.t)
+                  return (
+                    <div key={s.codigo} className="flex items-center gap-1.5">
+                      <span className="h-1.5 w-1.5 rounded-full" style={{ backgroundColor: s.color }} />
+                      <span className="text-muted">{s.label}</span>
+                      <span className="font-mono font-semibold ml-auto" style={{ color: s.color }}>
+                        {c ? c.v.toLocaleString('es-CL', { maximumFractionDigits: 3 }) : '—'}
+                      </span>
+                    </div>
+                  )
+                })}
               </div>
             </>
           )}
 
-          {/* Valor actual (sin hover) */}
+          {/* Valor actual de la base (sin hover) */}
           {!hp && (
             <span
               className="absolute right-1 text-[11px] font-mono font-semibold px-1 rounded pointer-events-none"
-              style={{ top: `${(yOf(ultimo) / H) * 100}%`, transform: 'translateY(-50%)', color, backgroundColor: 'rgba(0,0,0,0.6)' }}
+              style={{ top: `${(yOf(baseUltimo, base.codigo) / H) * 100}%`, transform: 'translateY(-50%)', color: base.color, backgroundColor: 'rgba(0,0,0,0.6)' }}
             >
-              {ultimo.toFixed(1)}
+              {baseUltimo.toFixed(1)}
             </span>
           )}
         </div>
       </div>
 
-      {/* Eje X: etiquetas por hora */}
+      {/* Eje X */}
       <div className="flex mt-1">
         <div className="w-12" />
         <div className="relative flex-1 h-3">
           {ticks.map((t, i) => (
             i % labelEvery === 0 && (
-              <span
-                key={i}
-                className="absolute text-[9px] text-muted -translate-x-1/2 whitespace-nowrap"
-                style={{ left: `${(xOf(t) / W) * 100}%` }}
-              >
-                {fmtHora(t)}
+              <span key={i} className="absolute text-[9px] text-muted -translate-x-1/2 whitespace-nowrap" style={{ left: `${(xOf(t) / W) * 100}%` }}>
+                {fmtTick(t)}
               </span>
             )
           ))}

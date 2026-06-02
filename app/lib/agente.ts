@@ -53,7 +53,7 @@ async function construirContexto(): Promise<string> {
     .from('series')
     .select('id, codigo, nombre, unidad')
     .eq('activo', true)
-    .in('codigo', ['USDCLP', 'COBRE', 'DXY', 'TPM', 'FED'])
+    .in('codigo', ['USDCLP', 'COBRE', 'DXY', 'TPM', 'FED', 'PETROLEO'])
 
   const factores = await Promise.all(
     (series ?? []).map(async (s) => {

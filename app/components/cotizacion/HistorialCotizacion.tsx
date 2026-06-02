@@ -1,89 +1,64 @@
 import { supabaseAdmin } from '@/app/lib/supabase'
-import GraficoInteractivo from './GraficoInteractivo'
+import ChartHistorial from './ChartHistorial'
 
-// Palabras clave para marcar noticias relevantes (versión interina).
-// Cuando llegue la IA (Fase 7), este criterio se reemplaza por impacto real.
+// Palabras clave para marcar noticias relevantes (interino, hasta Haiku/Fase 8).
 const KEYWORDS = /\b(fed|fomc|iran|israel|trump|tariff|arancel|petr[oó]leo|guerra|war|cobre|copper|intervenci|sanction|sanci[oó]n)\b/i
 
-// Espaciado mínimo entre pines para no saturar (ms)
-const ESPACIADO_MIN = 45 * 60 * 1000
+const PERIODO_INICIAL = '1sem'
+const DIAS_INICIAL = 7
 
-async function getDatos() {
-  const { data: serie } = await supabaseAdmin
-    .from('series').select('id').eq('codigo', 'USDCLP').single()
-  if (!serie) return { puntos: [], noticias: [] }
+// Carga server-side del período por defecto (USD/CLP + Cobre) para primer paint.
+async function getInicial() {
+  const { data: series } = await supabaseAdmin
+    .from('series')
+    .select('id, codigo')
+    .in('codigo', ['USDCLP', 'COBRE', 'DXY'])
 
-  const desde = new Date(Date.now() - 3 * 24 * 3600 * 1000).toISOString()
+  const idPorCodigo = new Map((series ?? []).map((s) => [s.codigo, s.id]))
+  const desde = new Date(Date.now() - DIAS_INICIAL * 24 * 3600 * 1000).toISOString()
 
-  const [{ data: puntos }, { data: noticias }] = await Promise.all([
-    supabaseAdmin
-      .from('datos_mercado')
-      .select('valor, fecha_dato')
-      .eq('serie_id', serie.id)
-      .gte('fecha_dato', desde)
-      .order('fecha_dato', { ascending: true }),
-    supabaseAdmin
-      .from('noticias')
-      .select('titulo, publicado_at')
-      .gte('publicado_at', desde)
-      .order('publicado_at', { ascending: true })
-      .limit(400)
-  ])
+  const seriesData: Record<string, { t: number; v: number }[]> = {}
+  await Promise.all(
+    ['USDCLP', 'COBRE', 'DXY'].map(async (codigo) => {
+      const id = idPorCodigo.get(codigo)
+      if (!id) { seriesData[codigo] = []; return }
+      const { data } = await supabaseAdmin
+        .from('datos_mercado')
+        .select('valor, fecha_dato')
+        .eq('serie_id', id)
+        .gte('fecha_dato', desde)
+        .order('fecha_dato', { ascending: true })
+      seriesData[codigo] = (data ?? []).map((p) => ({ t: new Date(p.fecha_dato).getTime(), v: p.valor }))
+    })
+  )
 
-  return { puntos: puntos ?? [], noticias: noticias ?? [] }
+  const { data: noticias } = await supabaseAdmin
+    .from('noticias')
+    .select('titulo, publicado_at')
+    .gte('publicado_at', desde)
+    .order('publicado_at', { ascending: true })
+    .limit(500)
+
+  const pines = (noticias ?? [])
+    .filter((n) => n.publicado_at && KEYWORDS.test(n.titulo))
+    .map((n) => ({ t: new Date(n.publicado_at!).getTime(), titulo: n.titulo }))
+
+  return { periodo: PERIODO_INICIAL, series: seriesData, pines }
 }
 
 export default async function HistorialCotizacion() {
-  const { puntos, noticias } = await getDatos()
+  const inicial = await getInicial()
 
-  if (puntos.length < 2) {
+  if ((inicial.series['USDCLP'] ?? []).length < 2) {
     return (
-      <div className="px-4 py-4 border-b border-gray-800">
-        <h3 className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-2">
+      <div className="px-4 py-4 border-b border-line">
+        <h3 className="text-xs font-semibold text-muted uppercase tracking-wider mb-2">
           Historial USD/CLP
         </h3>
-        <p className="text-xs text-gray-600">Acumulando datos... (se llena con el tiempo)</p>
+        <p className="text-xs text-muted/60">Acumulando datos…</p>
       </div>
     )
   }
 
-  const puntosClient = puntos.map(p => ({ t: new Date(p.fecha_dato).getTime(), v: p.valor }))
-  const t0 = puntosClient[0].t
-  const t1 = puntosClient[puntosClient.length - 1].t
-
-  const fmtDia = (t: number) => new Date(t).toLocaleDateString('es-CL', {
-    timeZone: 'America/Santiago', day: '2-digit', month: '2-digit'
-  })
-  const mismaFecha = new Date(t0).toDateString() === new Date(t1).toDateString()
-  const rangoLabel = mismaFecha ? fmtDia(t0) : `${fmtDia(t0)} – ${fmtDia(t1)}`
-
-  // Pines: keyword match + espaciado mínimo para no saturar
-  const candidatos = (noticias ?? [])
-    .filter(n => n.publicado_at && KEYWORDS.test(n.titulo))
-    .map(n => ({ t: new Date(n.publicado_at!).getTime(), titulo: n.titulo }))
-    .filter(p => p.t >= t0 && p.t <= t1)
-
-  const pines: { t: number; titulo: string }[] = []
-  let ultimoT = -Infinity
-  for (const c of candidatos) {
-    if (c.t - ultimoT >= ESPACIADO_MIN) {
-      pines.push(c)
-      ultimoT = c.t
-    }
-  }
-
-  return (
-    <div className="px-4 py-4 border-b border-gray-800">
-      <div className="flex items-center justify-between mb-2">
-        <h3 className="text-xs font-semibold text-muted uppercase tracking-wider">
-          Historial USD/CLP · {rangoLabel}
-        </h3>
-        <span className="text-xs text-muted">
-          {puntos.length} pts · <span className="text-amber-400">▲</span> {pines.length}
-        </span>
-      </div>
-
-      <GraficoInteractivo puntos={puntosClient} pines={pines} />
-    </div>
-  )
+  return <ChartHistorial inicial={inicial} />
 }

@@ -71,7 +71,8 @@ BASE DE DATOS (Supabase)
 | 3.4  | Integrar API financiera USD/CLP (Twelve Data)            | ☑        | YO     |
 | 3.5  | Integrar dato de mercado: Cobre (Yahoo Finance HG=F)     | ☑        | YO     |
 | 3.6  | Integrar dato de mercado: DXY (Yahoo Finance DX-Y.NYB)   | ☑        | YO     |
-| 3.7  | Integrar dato de mercado: Diferencial tasas TPM/Fed [Tier 1]| ☐     | YO     |
+| 3.7  | Integrar dato de mercado: Diferencial tasas TPM/Fed [Tier 1]| ☑*    | YO     |
+|      | → Fed: FRED/DFF integrado al cron + backfill ✓. TPM Chile: pendiente fuente (BCCh necesita credenciales) | | |
 | 3.8  | Crear endpoint GET /api/noticias (con filtros)           | ☑        | YO     |
 | 3.9  | Crear endpoint GET /api/cotizacion                       | ☑        | YO     |
 | 3.10 | Crear endpoint GET /api/datos-mercado (cobre, DXY, tasas)| ☑        | YO     |
@@ -106,7 +107,7 @@ BASE DE DATOS (Supabase)
 | 4.9  | Estructura para segundo tab (otro instrumento, vacío)    | ☐        | YO     |
 | 4.10 | Mostrar alertas en UI (badge/notificación en panel colapsable)| ☐  | YO     |
 | 4.11 | [Post-MVP] Botón "Refresh live" (fetch on-demand de noticias)| ☐   | YO     |
-| 4.12 | [Post-MVP] Gráfico USD/CLP superpuesto con Cobre (ver divergencias)| ☐ | YO  |
+| 4.12 | Gráfico USD/CLP superpuesto con Cobre/DXY/Petróleo + selector de período (1d/1sem/1mes/3mes) ✓| ☑ | YO  |
 | 4.13 | Pines de noticias en el gráfico — versión interina por palabras clave (mejora con IA en Fase 7)| ☑ | YO |
 
 ---
