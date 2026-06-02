@@ -10,6 +10,9 @@
 /.next/
 /out/
 
+# Build output Cloudflare (contiene env vars embebidas — NUNCA subir a git)
+/.open-next/
+
 # Producción
 /build
 
