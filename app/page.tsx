@@ -24,62 +24,17 @@ export default async function Home({
 
       {/* Banner / Header */}
       <header className="relative overflow-hidden border-b border-line bg-base h-[90px]">
-        {/* Globe decoration */}
-        <div className="absolute right-0 top-0 bottom-0 w-3/5 pointer-events-none select-none">
-          <svg
-            viewBox="0 0 480 180"
-            className="absolute right-0 top-1/2 -translate-y-1/2 h-[170%] opacity-[0.18]"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-          >
-            <defs>
-              <clipPath id="globe-clip">
-                <circle cx="320" cy="90" r="115" />
-              </clipPath>
-            </defs>
-            <circle cx="320" cy="90" r="115" stroke="#00FF7F" strokeWidth="0.8" strokeOpacity="0.7" />
-            <g clipPath="url(#globe-clip)" stroke="#00FF7F" fill="none">
-              <ellipse cx="320" cy="33"  rx="57"  ry="17"  strokeWidth="0.6" strokeOpacity="0.55" />
-              <ellipse cx="320" cy="62"  rx="95"  ry="28"  strokeWidth="0.6" strokeOpacity="0.55" />
-              <ellipse cx="320" cy="90"  rx="115" ry="33"  strokeWidth="0.6" strokeOpacity="0.55" />
-              <ellipse cx="320" cy="118" rx="95"  ry="28"  strokeWidth="0.6" strokeOpacity="0.55" />
-              <ellipse cx="320" cy="147" rx="57"  ry="17"  strokeWidth="0.6" strokeOpacity="0.55" />
-              <ellipse cx="320" cy="90"  rx="28"  ry="115" strokeWidth="0.5" strokeOpacity="0.4" />
-              <ellipse cx="320" cy="90"  rx="65"  ry="115" strokeWidth="0.5" strokeOpacity="0.4" />
-              <ellipse cx="320" cy="90"  rx="100" ry="115" strokeWidth="0.5" strokeOpacity="0.4" />
-              <ellipse cx="320" cy="90"  rx="115" ry="115" strokeWidth="0.5" strokeOpacity="0.4" />
-            </g>
-            <g fill="#00FF7F">
-              <circle cx="248" cy="70"  r="2.5" opacity="0.85" />
-              <circle cx="285" cy="52"  r="2"   opacity="0.75" />
-              <circle cx="312" cy="83"  r="3"   opacity="0.95" />
-              <circle cx="352" cy="65"  r="2"   opacity="0.75" />
-              <circle cx="378" cy="93"  r="2.5" opacity="0.85" />
-              <circle cx="357" cy="122" r="2"   opacity="0.75" />
-              <circle cx="298" cy="128" r="2"   opacity="0.65" />
-              <circle cx="262" cy="107" r="2"   opacity="0.75" />
-              <circle cx="422" cy="72"  r="1.8" opacity="0.5"  />
-              <circle cx="443" cy="107" r="1.5" opacity="0.4"  />
-              <circle cx="407" cy="45"  r="1.5" opacity="0.45" />
-            </g>
-            <g stroke="#00FF7F" strokeWidth="0.9" strokeOpacity="0.6" fill="none">
-              <line x1="248" y1="70"  x2="285" y2="52"  />
-              <line x1="285" y1="52"  x2="312" y2="83"  />
-              <line x1="312" y1="83"  x2="352" y2="65"  />
-              <line x1="352" y1="65"  x2="378" y2="93"  />
-              <line x1="378" y1="93"  x2="357" y2="122" />
-              <line x1="357" y1="122" x2="298" y2="128" />
-              <line x1="298" y1="128" x2="262" y2="107" />
-              <line x1="262" y1="107" x2="248" y2="70"  />
-              <line x1="312" y1="83"  x2="298" y2="128" />
-              <line x1="312" y1="83"  x2="262" y2="107" />
-              <line x1="378" y1="93"  x2="422" y2="72"  />
-              <line x1="422" y1="72"  x2="443" y2="107" />
-              <line x1="352" y1="65"  x2="407" y2="45"  />
-              <line x1="407" y1="45"  x2="422" y2="72"  />
-            </g>
-          </svg>
-        </div>
+        {/* Fondo mapamundi — imagen real */}
+        <div
+          className="absolute inset-0 bg-no-repeat opacity-75"
+          style={{
+            backgroundImage: "url('/fondo-globo.png')",
+            backgroundSize: 'cover',
+            backgroundPosition: 'right center',
+          }}
+        />
+        {/* Fade izquierda para proteger legibilidad del logo */}
+        <div className="absolute inset-0 bg-gradient-to-r from-base via-base/85 to-transparent pointer-events-none" />
 
         {/* Content */}
         <div className="relative z-10 h-full flex items-center justify-between px-4 lg:px-6 gap-2">
