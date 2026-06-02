@@ -125,10 +125,18 @@ BASE DE DATOS (Supabase)
 
 ## Fase 6: Agregar agente conversacional
 
+> Filas reordenadas por dependencia lógica (números conservados, según protocolo).
+> El bloque de setup + seguridad (6.1, 6.10–6.13) es prerrequisito para exponer el agente
+> sin riesgo de robo de tokens.
+
 | N°   | Descripción                                              | Realizado | Quién  |
 |------|----------------------------------------------------------|-----------|--------|
-| 6.1  | Elegir servicio de IA para el agente                     | ☐        | TÚ+YO  |
+| 6.1  | Elegir servicio de IA (OpenAI: gpt-5.4 agente, gpt-5.4-mini clasificación)| ☑ | TÚ+YO |
+| 6.10 | Configurar OpenAI API key y variables de entorno (local + Netlify)| ☑*  | TÚ+YO  |
+| 6.11 | Implementar auth gate: login + middleware (protege páginas y APIs)| ☑   | YO     |
+| 6.12 | Configurar tope de gasto mensual en OpenAI (backstop anti-robo de tokens)| ☐ | TÚ |
 | 6.2  | Crear endpoint POST /api/consulta-agente                 | ☐        | YO     |
+| 6.13 | Agregar rate limiting + max_tokens + límite de input al endpoint del agente| ☐ | YO |
 | 6.3  | Diseñar prompt del agente (contexto + noticias del día)  | ☐        | TÚ+YO  |
 | 6.4  | Conectar chat del frontend con el agente                 | ☐        | YO     |
 | 6.5  | Guardar historial de conversaciones en BD                | ☐        | YO     |

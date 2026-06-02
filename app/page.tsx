@@ -23,10 +23,10 @@ export default async function Home({
     <div className="min-h-screen bg-base text-snow">
 
       {/* Banner / Header */}
-      <header className="relative overflow-hidden border-b border-line bg-base h-[90px]">
+      <header className="relative overflow-hidden border-b border-line bg-base h-[120px]">
         {/* Fondo mapamundi — imagen real */}
         <div
-          className="absolute inset-0 bg-no-repeat opacity-75"
+          className="absolute inset-0 bg-no-repeat opacity-90"
           style={{
             backgroundImage: "url('/fondo-globo.png')",
             backgroundSize: 'cover',
@@ -83,7 +83,7 @@ export default async function Home({
       </div>
 
       {/* Layout principal */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-0 lg:h-[calc(100vh-128px)]">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-0 lg:h-[calc(100vh-158px)]">
 
         {/* Noticias */}
         <div className="lg:col-span-1 border-r border-line lg:overflow-y-auto">

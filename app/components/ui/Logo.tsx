@@ -6,17 +6,17 @@ export default function Logo() {
       <Image
         src="/logo.png"
         alt="EZ Trader logo"
-        width={56}
-        height={56}
-        className="object-contain"
+        width={96}
+        height={96}
+        className="object-contain h-16 w-16 lg:h-[88px] lg:w-[88px]"
         priority
       />
-      <div className="leading-none">
-        <div className="text-xl font-bold tracking-tight">
-          <span className="text-brand">EZ</span><span className="text-snow"> Trader</span>
+      <div className="leading-none hidden sm:block border-l border-line pl-3">
+        <div className="text-[10px] lg:text-[11px] tracking-[0.22em] text-brandDark font-semibold">
+          TRADE SMART.
         </div>
-        <div className="text-[9px] tracking-[0.22em] text-brandDark font-semibold mt-[5px]">
-          TRADE SMART. GROW CONFIDENT.
+        <div className="text-[10px] lg:text-[11px] tracking-[0.22em] text-muted font-semibold mt-1">
+          GROW CONFIDENT.
         </div>
       </div>
     </div>
