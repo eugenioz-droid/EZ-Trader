@@ -1,7 +1,7 @@
 // Configuración de autenticación compartida entre middleware y endpoint de login.
 // Mantener libre de APIs de Node: el middleware corre en el Edge Runtime.
 
-export const COOKIE_NAME = 'ez_auth'
+export const COOKIE_NAME = 'ez_auth'  // debe coincidir con el middleware
 
 // El valor de la cookie es el AUTH_SECRET (string largo aleatorio).
 // Como la cookie es httpOnly, JS del navegador no puede leerla (anti-XSS),

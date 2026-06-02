@@ -9,6 +9,7 @@ import BotonBriefing from './components/ui/BotonBriefing'
 import UltimaActualizacion from './components/ui/UltimaActualizacion'
 import PanelAlertas from './components/ui/PanelAlertas'
 import Logo from './components/ui/Logo'
+import BotonLogout from './components/ui/BotonLogout'
 
 export const dynamic = 'force-dynamic'
 
@@ -53,6 +54,7 @@ export default async function Home({
               <span className="h-2 w-2 rounded-full bg-brand animate-pulse"></span>
               En vivo · cada 15 min
             </div>
+            <BotonLogout />
           </div>
         </div>
       </header>
