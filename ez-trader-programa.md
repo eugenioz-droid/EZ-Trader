@@ -120,14 +120,14 @@ BASE DE DATOS (Supabase)
 
 | N°   | Descripción                                              | Realizado | Quién  |
 |------|----------------------------------------------------------|-----------|--------|
-| 5.1  | Crear cuenta Cloudflare y activar Workers Paid ($5/mes)  | ☐        | TÚ     |
-| 5.2  | Instalar OpenNext + Wrangler en el proyecto              | ☐        | YO     |
-| 5.3  | Crear open-next.config.ts y wrangler.toml                | ☐        | YO     |
-| 5.4  | Ajustar next.config.mjs y scripts de build para Cloudflare| ☐       | YO     |
-| 5.5  | Conectar repositorio GitHub con Cloudflare Pages         | ☐        | TÚ     |
-| 5.6  | Migrar todas las variables de entorno a Cloudflare       | ☐        | TÚ     |
-| 5.7  | Testing del deploy: app, login, APIs y middleware        | ☐        | TÚ+YO  |
-| 5.8  | Actualizar URL del cron en Supabase al nuevo dominio     | ☐        | TÚ+YO  |
+| 5.1  | Crear cuenta Cloudflare y activar Workers Paid ($5/mes)  | ☑        | TÚ     |
+| 5.2  | Instalar OpenNext + Wrangler en el proyecto              | ☑        | YO     |
+| 5.3  | Crear open-next.config.ts y wrangler.toml                | ☑        | YO     |
+| 5.4  | Ajustar next.config.mjs y scripts de build para Cloudflare| ☑       | YO     |
+| 5.5  | Conectar repositorio GitHub con Cloudflare Workers       | ☑        | TÚ     |
+| 5.6  | Migrar variables de entorno a Cloudflare (wrangler secret bulk + [vars])| ☑ | TÚ+YO |
+| 5.7  | Testing del deploy: app, login, APIs y middleware        | ☑        | TÚ+YO  |
+| 5.8  | Actualizar URL del cron en Supabase al nuevo dominio     | ☑        | TÚ+YO  |
 | 5.9  | Monitoreo post-migración (logs, errores)                 | ☐        | TÚ+YO  |
 | 5.10 | Dar de baja Netlify                                      | ☐        | TÚ     |
 
@@ -139,7 +139,7 @@ BASE DE DATOS (Supabase)
 |------|----------------------------------------------------------|-----------|--------|
 | 6.1  | Testing completo del flujo (noticias → BD → frontend)    | ☑        | TÚ+YO  |
 | 6.2  | Verificar que cron ejecuta correctamente cada 15 min     | ☑        | TÚ+YO  |
-| 6.3  | Deploy en producción y verificar (ahora Cloudflare)      | ☐        | YO     |
+| 6.3  | Deploy en producción y verificar (ahora Cloudflare)      | ☑        | YO     |
 | 6.4  | Ajustes finales según lo que veas en uso real            | ☐        | YO     |
 
 ---
