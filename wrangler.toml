@@ -3,6 +3,15 @@ main = ".open-next/worker.js"
 compatibility_date = "2025-04-01"
 compatibility_flags = ["nodejs_compat", "nodejs_compat_populate_process_env"]
 
+# No borrar las vars/secrets ya configurados en el worker al hacer deploy
+keep_vars = true
+
+# Variables PÚBLICAS (diseñadas para exponerse al cliente — sin riesgo en el repo).
+# Los secrets reales NO van acá: se suben con `wrangler secret put/bulk`.
+[vars]
+NEXT_PUBLIC_SUPABASE_URL = "https://trjkxoixghsaivijnyiw.supabase.co"
+NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY = "sb_publishable_QIPc86P_T_--IAMnktaGUQ_0CjcilOm"
+
 [assets]
 directory = ".open-next/assets"
 binding = "ASSETS"

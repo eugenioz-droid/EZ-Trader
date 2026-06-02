@@ -13,6 +13,9 @@
 # Build output Cloudflare (contiene env vars embebidas — NUNCA subir a git)
 /.open-next/
 
+# Archivo temporal con secrets para subir a Cloudflare (NUNCA subir a git)
+cf-secrets.json
+
 # Producción
 /build
 
