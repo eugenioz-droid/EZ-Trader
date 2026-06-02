@@ -1,11 +1,22 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { COOKIE_NAME, SESSION_MAX_AGE } from '@/app/lib/auth'
 
+async function getCfEnv(): Promise<Record<string, string>> {
+  try {
+    const { getCloudflareContext } = await import('@opennextjs/cloudflare')
+    const { env } = await getCloudflareContext({ async: true })
+    return env as Record<string, string>
+  } catch {
+    return {}
+  }
+}
+
 export async function POST(req: NextRequest) {
   const { password } = await req.json().catch(() => ({ password: '' }))
 
-  const esperado = process.env.APP_PASSWORD
-  const secret = process.env.AUTH_SECRET
+  const cfEnv = await getCfEnv()
+  const esperado = cfEnv.APP_PASSWORD || process.env.APP_PASSWORD
+  const secret   = cfEnv.AUTH_SECRET  || process.env.AUTH_SECRET
 
   if (!esperado || !secret) {
     return NextResponse.json(
@@ -20,9 +31,9 @@ export async function POST(req: NextRequest) {
 
   const res = NextResponse.json({ ok: true })
   res.cookies.set(COOKIE_NAME, secret, {
-    httpOnly: true,                                  // JS del navegador no puede leerla (anti-XSS)
-    secure: process.env.NODE_ENV === 'production',   // solo HTTPS en producción
-    sameSite: 'lax',                                 // anti-CSRF razonable
+    httpOnly: true,
+    secure: true,
+    sameSite: 'lax',
     path: '/',
     maxAge: SESSION_MAX_AGE,
   })

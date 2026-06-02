@@ -8,7 +8,19 @@ const RUTAS_PUBLICAS = [
   '/api/cron',
 ]
 
-export function middleware(req: NextRequest) {
+async function getAuthSecret(): Promise<string | undefined> {
+  // Primero intenta Cloudflare context (producción)
+  try {
+    const { getCloudflareContext } = await import('@opennextjs/cloudflare')
+    const { env } = await getCloudflareContext({ async: true })
+    const s = (env as Record<string, string>).AUTH_SECRET
+    if (s) return s
+  } catch { /* local dev o no disponible */ }
+  // Fallback a process.env (local)
+  return process.env.AUTH_SECRET
+}
+
+export async function middleware(req: NextRequest) {
   try {
     const { pathname } = req.nextUrl
 
@@ -16,13 +28,11 @@ export function middleware(req: NextRequest) {
       return NextResponse.next()
     }
 
-    const secret = process.env.AUTH_SECRET
+    const secret = await getAuthSecret()
     const cookie = req.cookies.get(COOKIE_NAME)?.value
     const autorizado = secret && cookie && cookie === secret
 
-    if (autorizado) {
-      return NextResponse.next()
-    }
+    if (autorizado) return NextResponse.next()
 
     if (pathname.startsWith('/api/')) {
       return NextResponse.json({ error: 'No autorizado' }, { status: 401 })
@@ -33,7 +43,6 @@ export function middleware(req: NextRequest) {
     url.searchParams.set('next', pathname)
     return NextResponse.redirect(url)
   } catch {
-    // Si algo falla, dejar pasar (mejor que romper toda la app)
     return NextResponse.next()
   }
 }
