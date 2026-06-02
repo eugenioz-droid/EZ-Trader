@@ -107,7 +107,7 @@ BASE DE DATOS (Supabase)
 | 4.10 | Mostrar alertas en UI (badge/notificación en panel colapsable)| ☐  | YO     |
 | 4.11 | [Post-MVP] Botón "Refresh live" (fetch on-demand de noticias)| ☐   | YO     |
 | 4.12 | [Post-MVP] Gráfico USD/CLP superpuesto con Cobre (ver divergencias)| ☐ | YO  |
-| 4.13 | [Post-MVP] Línea de precio con marcadores de noticias de alto impacto| ☐ | YO |
+| 4.13 | Pines de noticias en el gráfico — versión interina por palabras clave (mejora con IA en Fase 7)| ☑ | YO |
 
 ---
 

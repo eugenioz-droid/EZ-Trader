@@ -7,14 +7,9 @@ const parser = new Parser({
 })
 
 // Feeds RSS configurados (se mueven a tabla fuentes más adelante)
+// NOTA: FXStreet se quitó — bloqueado desde los servidores de Netlify (diagnóstico 2026-06-01).
 const FEEDS = [
-  // Feeds rápidos intradía (inglés, financiero)
-  {
-    nombre: 'FXStreet',
-    url: 'https://www.fxstreet.com/rss/news',
-    fuente_nombre: 'FXStreet',
-    idioma: 'en'
-  },
+  // Feed rápido intradía (inglés)
   {
     nombre: 'investingLive',
     url: 'https://investinglive.com/feed/news',
