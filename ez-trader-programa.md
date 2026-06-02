@@ -111,58 +111,80 @@ BASE DE DATOS (Supabase)
 
 ---
 
-## Fase 5: Testing, ajustes y Deploy
+## Fase 5: Migración a Cloudflare
+
+> Reemplaza Netlify como plataforma de deploy. Razones: firewall corporativo bloquea
+> *.netlify.app y los créditos de build se agotaron. Cloudflare Pages + Workers Paid
+> ($5/mes) resuelve ambos problemas y cubre todas las apps futuras en el mismo plan.
+> Requiere adaptador OpenNext (recomendado por Cloudflare para Next.js App Router).
 
 | N°   | Descripción                                              | Realizado | Quién  |
 |------|----------------------------------------------------------|-----------|--------|
-| 5.1  | Testing completo del flujo (noticias → BD → frontend)    | ☑        | TÚ+YO  |
-| 5.2  | Verificar que cron ejecuta correctamente cada 15 min     | ☑        | TÚ+YO  |
-| 5.3  | Deploy a Netlify y verificar en producción               | ☑        | YO     |
-| 5.4  | Monitoreo post-launch (logs, errores)                    | ☐        | TÚ+YO  |
-| 5.5  | Ajustes finales según lo que veas en uso real            | ☐        | YO     |
+| 5.1  | Crear cuenta Cloudflare y activar Workers Paid ($5/mes)  | ☐        | TÚ     |
+| 5.2  | Instalar OpenNext + Wrangler en el proyecto              | ☐        | YO     |
+| 5.3  | Crear open-next.config.ts y wrangler.toml                | ☐        | YO     |
+| 5.4  | Ajustar next.config.mjs y scripts de build para Cloudflare| ☐       | YO     |
+| 5.5  | Conectar repositorio GitHub con Cloudflare Pages         | ☐        | TÚ     |
+| 5.6  | Migrar todas las variables de entorno a Cloudflare       | ☐        | TÚ     |
+| 5.7  | Testing del deploy: app, login, APIs y middleware        | ☐        | TÚ+YO  |
+| 5.8  | Actualizar URL del cron en Supabase al nuevo dominio     | ☐        | TÚ+YO  |
+| 5.9  | Monitoreo post-migración (logs, errores)                 | ☐        | TÚ+YO  |
+| 5.10 | Dar de baja Netlify                                      | ☐        | TÚ     |
 
 ---
 
-## Fase 6: Agregar agente conversacional
-
-> Filas reordenadas por dependencia lógica (números conservados, según protocolo).
-> El bloque de setup + seguridad (6.1, 6.10–6.13) es prerrequisito para exponer el agente
-> sin riesgo de robo de tokens.
+## Fase 6: Testing, ajustes y Deploy
 
 | N°   | Descripción                                              | Realizado | Quién  |
 |------|----------------------------------------------------------|-----------|--------|
-| 6.1  | Elegir servicio de IA (OpenAI: gpt-5.4 agente, gpt-5.4-mini clasificación)| ☑ | TÚ+YO |
-| 6.10 | Configurar OpenAI API key y variables de entorno (local + Netlify)| ☑*  | TÚ+YO  |
-| 6.11 | Implementar auth gate: login + middleware (protege páginas y APIs)| ☑   | YO     |
-| 6.12 | Configurar tope de gasto mensual en OpenAI (backstop anti-robo de tokens)| ☐ | TÚ |
-| 6.2  | Crear endpoint POST /api/consulta-agente                 | ☐        | YO     |
-| 6.13 | Agregar rate limiting + max_tokens + límite de input al endpoint del agente| ☐ | YO |
-| 6.3  | Diseñar prompt del agente (contexto + noticias del día)  | ☐        | TÚ+YO  |
-| 6.4  | Conectar chat del frontend con el agente                 | ☐        | YO     |
-| 6.5  | Guardar historial de conversaciones en BD                | ☐        | YO     |
-| 6.6  | Testing del agente (calidad de respuestas)               | ☐        | TÚ     |
-| 6.7  | Capacidad de planificación de estrategias (agente, ver docs/estrategia.md)| ☐ | TÚ+YO |
-| 6.8  | Alertas interpretadas por el agente (capa sobre las de reglas)| ☐    | YO     |
-| 6.9  | [Fase 2] Reporting rápido (resumen de fin de semana)     | ☐        | YO     |
+| 6.1  | Testing completo del flujo (noticias → BD → frontend)    | ☑        | TÚ+YO  |
+| 6.2  | Verificar que cron ejecuta correctamente cada 15 min     | ☑        | TÚ+YO  |
+| 6.3  | Deploy en producción y verificar (ahora Cloudflare)      | ☐        | YO     |
+| 6.4  | Ajustes finales según lo que veas en uso real            | ☐        | YO     |
 
 ---
 
-## Fase 7: Agregar IA para clasificación de noticias
+## Fase 7: Agregar agente conversacional
+
+> Filas ordenadas por dependencia lógica. El bloque de setup + seguridad
+> (7.1, 7.10–7.13) es prerrequisito para exponer el agente sin riesgo de robo de tokens.
+> ⚠️ Proveedor de IA pendiente de confirmar: OpenAI tuvo problemas de pago con tarjetas
+> chilenas. Posible alternativa: Gemini (Google AI Studio, tiene tier gratis).
 
 | N°   | Descripción                                              | Realizado | Quién  |
 |------|----------------------------------------------------------|-----------|--------|
-| 7.1  | Elegir servicio de IA (gratis o pago según presupuesto)  | ☐        | TÚ+YO  |
-| 7.2  | Crear prompt para clasificar impacto (alto/medio/bajo)   | ☐        | TÚ+YO  |
-| 7.3  | Crear prompt para detectar factor afectado (taxonomía de docs/factores-usd-clp.md) | ☐ | TÚ+YO  |
-| 7.4  | Integrar clasificación en el cron job                    | ☐        | YO     |
-| 7.5  | Mostrar clasificación en tarjetas de noticias            | ☐        | YO     |
-| 7.6  | Testing de calidad de análisis                           | ☐        | TÚ     |
-| 7.7  | Análisis fino de factor-noticia: China [Tier 2]          | ☐        | YO     |
-| 7.8  | Análisis de factor-noticia: Fed/FOMC/macro EE.UU. [Tier 2]| ☐       | YO     |
-| 7.9  | Análisis de factor-noticia: Geopolítica [Tier 2]         | ☐        | YO     |
-| 7.10 | Análisis de factor-noticia: Intervención BCCh [Tier 3]   | ☐        | YO     |
-| 7.11 | Análisis de factor-noticia: Política local/AFP [Tier 3]  | ☐        | YO     |
-| 7.12 | Análisis de factor-noticia: IPC Chile [Tier 3]           | ☐        | YO     |
+| 7.1  | Confirmar proveedor de IA (OpenAI vs Gemini) y modelos   | ☐        | TÚ+YO  |
+| 7.10 | Configurar API key y variables de entorno (local + Cloudflare)| ☐   | TÚ+YO  |
+| 7.11 | Implementar auth gate: login + middleware ✓ (ya hecho)   | ☑        | YO     |
+| 7.12 | Configurar tope de gasto mensual en proveedor de IA      | ☐        | TÚ     |
+| 7.2  | Crear endpoint POST /api/consulta-agente                 | ☐        | YO     |
+| 7.13 | Agregar rate limiting + max_tokens + límite de input     | ☐        | YO     |
+| 7.3  | Diseñar prompt del agente (contexto + noticias del día)  | ☐        | TÚ+YO  |
+| 7.4  | Conectar chat del frontend con el agente                 | ☐        | YO     |
+| 7.5  | Guardar historial de conversaciones en BD                | ☐        | YO     |
+| 7.6  | Testing del agente (calidad de respuestas)               | ☐        | TÚ     |
+| 7.7  | Capacidad de planificación de estrategias (ver docs/estrategia.md)| ☐ | TÚ+YO |
+| 7.8  | Alertas interpretadas por el agente (capa sobre reglas)  | ☐        | YO     |
+| 7.9  | [Fase 2] Reporting rápido (resumen de fin de semana)     | ☐        | YO     |
+
+---
+
+## Fase 8: Agregar IA para clasificación de noticias
+
+| N°   | Descripción                                              | Realizado | Quién  |
+|------|----------------------------------------------------------|-----------|--------|
+| 8.1  | Elegir modelo para clasificación (mismo proveedor que agente, tier mini)| ☐ | TÚ+YO |
+| 8.2  | Crear prompt para clasificar impacto (alto/medio/bajo)   | ☐        | TÚ+YO  |
+| 8.3  | Crear prompt para detectar factor afectado (ver docs/factores-usd-clp.md)| ☐ | TÚ+YO |
+| 8.4  | Integrar clasificación en el cron job                    | ☐        | YO     |
+| 8.5  | Mostrar clasificación en tarjetas de noticias            | ☐        | YO     |
+| 8.6  | Testing de calidad de análisis                           | ☐        | TÚ     |
+| 8.7  | Análisis fino de factor-noticia: China [Tier 2]          | ☐        | YO     |
+| 8.8  | Análisis de factor-noticia: Fed/FOMC/macro EE.UU. [Tier 2]| ☐       | YO     |
+| 8.9  | Análisis de factor-noticia: Geopolítica [Tier 2]         | ☐        | YO     |
+| 8.10 | Análisis de factor-noticia: Intervención BCCh [Tier 3]   | ☐        | YO     |
+| 8.11 | Análisis de factor-noticia: Política local/AFP [Tier 3]  | ☐        | YO     |
+| 8.12 | Análisis de factor-noticia: IPC Chile [Tier 3]           | ☐        | YO     |
 
 ---
 
@@ -177,8 +199,9 @@ BASE DE DATOS (Supabase)
 - Fase 1: 1-2 días
 - Fase 2: 1-2 días (importante no saltársela)
 - Fases 3-4: 7-10 días
-- Fase 5: 2-3 días
-- Fases 6-7: después, cuando tengas presupuesto
+- Fase 5: 1-2 días (migración a Cloudflare)
+- Fase 6: 1 día (testing y ajustes post-migración)
+- Fases 7-8: después, cuando confirmes proveedor de IA
 
 ### Quién hace qué
 - **TÚ** = Crear cuentas, tomar decisiones, testing, aprobar diseños
