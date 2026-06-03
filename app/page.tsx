@@ -8,6 +8,7 @@ import BotonRefresh from './components/ui/BotonRefresh'
 import BotonBriefing from './components/ui/BotonBriefing'
 import UltimaActualizacion from './components/ui/UltimaActualizacion'
 import PanelAlertas from './components/ui/PanelAlertas'
+import CronStatus from './components/ui/CronStatus'
 import Logo from './components/ui/Logo'
 import BotonLogout from './components/ui/BotonLogout'
 
@@ -61,6 +62,7 @@ export default async function Home({
           <Suspense fallback={null}>
             <UltimaActualizacion />
           </Suspense>
+          <CronStatus />
           <PanelAlertas />
           <BotonBriefing />
           <BotonRefresh />

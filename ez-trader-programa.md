@@ -251,7 +251,11 @@ BASE DE DATOS (Supabase PostgreSQL)
 | 10.4  | **Ampliar/auditar fuentes de noticias**: revisar qué medios relevantes quedan fuera y sumar RSS directos rápidos (Reuters/Bloomberg markets, económico chileno). Hoy: 1 fuente directa (investingLive) + 5 búsquedas Google News | ☐ | TÚ+YO |
 | 10.5  | Botón Refresh on-demand de noticias (ya existía; + clasificación Haiku en el refresh) | ☑ | YO |
 | 10.6  | TPM real → **RESUELTO con mindicador.cl** (no se necesitó el BCCh)   | ☑        | YO     |
-| 10.7  | **[Robustez] Indicador de frescura por factor** ✓: punto verde/ámbar + "hace X" por factor; frescura relativa al latido USD/CLP (⚠️ si una fuente se congela mientras las demás siguen); "mercado cerrado" si el latido está viejo. Caza fallos silenciosos como el de Yahoo/cobre | ☑ | YO |
+| 10.7  | **[Robustez A] Indicador de frescura por factor** ✓: punto verde/ámbar + "hace X" por factor; frescura relativa al latido USD/CLP (⚠️ si una fuente se congela mientras las demás siguen); "mercado cerrado" si el latido está viejo. Caza fallos silenciosos como el de Yahoo/cobre | ☑ | YO |
+| 10.8  | **[Robustez C] Visibilidad del cron**: tabla `cron_runs` (migración 0007) registra cada corrida (duración, ok, errores por paso) + indicador en header (punto verde/ámbar/rojo con detalle). Surface fallos silenciosos en vez de perderlos en logs | ☑ | YO |
+| 10.9  | **[Fix raíz] Clasificador con NOT IN gigante**: la URL con cientos de IDs hacía que PostgREST ignorara el ORDER BY → noticias nuevas nunca se clasificaban (sin badges). Reescrito con pool de 80 recientes + IN acotado | ☑ | YO |
+| 10.10 | **[Fix raíz] Cron tardaba 48s**: fetches de mercado sin timeout (Stooq se cuelga en Workers) → pg_cron cortaba antes de clasificar. Timeout 6s por fetch + clasificación movida antes de precios | ☑ | YO |
+| 10.11 | [Robustez D] Validar datos antes de guardar (rechazar fecha futura / valores absurdos) — pendiente, prioridad baja | ☐ | YO |
 
 ---
 

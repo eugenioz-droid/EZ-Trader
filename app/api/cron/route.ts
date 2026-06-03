@@ -3,6 +3,7 @@ import { obtenerNoticias, guardarNoticias } from '@/app/lib/noticias'
 import { obtenerPrecios, guardarPrecios } from '@/app/lib/mercado'
 import { evaluarAlertas } from '@/app/lib/alertas'
 import { clasificarNoticiasNuevas } from '@/app/lib/clasificador'
+import { registrarCorrida } from '@/app/lib/cronlog'
 
 // Clave secreta para que solo Supabase pueda llamar este endpoint
 const CRON_SECRET = process.env.CRON_SECRET
@@ -54,6 +55,8 @@ export async function GET(req: NextRequest) {
   }
 
   resultados.duracion_ms = Date.now() - inicio
+
+  await registrarCorrida('cron', resultados)
 
   console.log('Cron ejecutado:', JSON.stringify(resultados))
   return NextResponse.json({ ok: true, ...resultados })

@@ -3,6 +3,7 @@ import { obtenerNoticias, guardarNoticias } from '@/app/lib/noticias'
 import { obtenerPrecios, guardarPrecios } from '@/app/lib/mercado'
 import { evaluarAlertas } from '@/app/lib/alertas'
 import { clasificarNoticiasNuevas } from '@/app/lib/clasificador'
+import { registrarCorrida } from '@/app/lib/cronlog'
 
 // En Cloudflare Workers el self-fetch falla, así que llamamos las funciones directamente.
 // Mismo flujo que el cron pero disparado a mano por el usuario ("Actualizar ahora").
@@ -42,5 +43,6 @@ export async function POST() {
   }
 
   resultados.duracion_ms = Date.now() - inicio
+  await registrarCorrida('refresh', resultados)
   return NextResponse.json({ ok: true, ...resultados })
 }
