@@ -206,8 +206,8 @@ BASE DE DATOS (Supabase PostgreSQL)
 | 8.2  | Prompt para clasificar impacto (alto/medio/bajo) + confianza | ☑    | TÚ+YO  |
 | 8.3  | Prompt para detectar factor afectado (11 factores: A1–B6) | ☑       | TÚ+YO  |
 | 8.4  | Integración en el cron + alertas automáticas alto impacto ≥0.65 | ☑  | YO     |
-| 8.5  | Mostrar clasificación en tarjetas de noticias (color por impacto) | ☐  | YO     |
-| 8.6  | Testing de calidad de análisis                           | ☐        | TÚ     |
+| 8.5  | Mostrar clasificación en tarjetas (impacto/factor/dirección/confianza) — código listo en PanelNoticias, se activa al llegar datos Haiku | ☑ | YO |
+| 8.6  | Testing de calidad de análisis (requiere Haiku corriendo con noticias frescas) | ☐ | TÚ |
 | 8.7–8.12 | Análisis fino por factor (China, Fed, Geopolítica, BCCh, AFP, IPC) | ☑ (en prompt) | YO |
 
 ---

@@ -62,29 +62,44 @@ export interface NoticiaRaw {
   idioma: string
 }
 
-export async function obtenerNoticias(): Promise<NoticiaRaw[]> {
-  const noticias: NoticiaRaw[] = []
+// Descarga un feed con fetch nativo (funciona en Cloudflare Workers) y lo parsea
+// con parseString (XML puro JS). NO usar parser.parseURL: usa el cliente HTTP de
+// Node, que NO funciona en Workers → era la causa de que las noticias no llegaran.
+async function descargarFeed(feed: typeof FEEDS[number]): Promise<NoticiaRaw[]> {
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 10000)
+  try {
+    const res = await fetch(feed.url, {
+      headers: { 'User-Agent': 'Mozilla/5.0 (EZ-Trader/1.0)' },
+      signal: controller.signal,
+    })
+    if (!res.ok) throw new Error(`HTTP ${res.status}`)
+    const xml = await res.text()
+    const resultado = await parser.parseString(xml)
 
-  for (const feed of FEEDS) {
-    try {
-      const resultado = await parser.parseURL(feed.url)
-      for (const item of resultado.items.slice(0, 20)) {
-        if (!item.link) continue
-        noticias.push({
-          titulo: item.title ?? 'Sin título',
-          resumen: item.contentSnippet ?? item.summary ?? null,
-          url: item.link,
-          publicado_at: item.pubDate ?? item.isoDate ?? null,
-          fuente_nombre: feed.fuente_nombre,
-          idioma: feed.idioma
-        })
-      }
-    } catch (err) {
-      console.error(`Error obteniendo feed ${feed.nombre}:`, err)
-    }
+    return resultado.items.slice(0, 20).flatMap((item) => {
+      if (!item.link) return []
+      return [{
+        titulo: item.title ?? 'Sin título',
+        resumen: item.contentSnippet ?? item.summary ?? null,
+        url: item.link,
+        publicado_at: item.pubDate ?? item.isoDate ?? null,
+        fuente_nombre: feed.fuente_nombre,
+        idioma: feed.idioma,
+      }]
+    })
+  } catch (err) {
+    console.error(`Error obteniendo feed ${feed.nombre}:`, err)
+    return []
+  } finally {
+    clearTimeout(timeout)
   }
+}
 
-  return noticias
+export async function obtenerNoticias(): Promise<NoticiaRaw[]> {
+  // Descarga todos los feeds en paralelo (más rápido que secuencial).
+  const resultados = await Promise.all(FEEDS.map(descargarFeed))
+  return resultados.flat()
 }
 
 export async function guardarNoticias(noticias: NoticiaRaw[]): Promise<number> {
