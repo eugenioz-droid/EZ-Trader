@@ -4,29 +4,41 @@
 
 **Objetivo:** Web personal que recopila noticias automáticamente, las analiza con IA, muestra cotizaciones en tiempo real, guarda historial y permite consultar a un agente para apoyar decisiones de trading.
 
-**Stack:** Next.js (Netlify) | Supabase (BD + Cron + Edge Functions) | IA (por definir en Fase 7)
+**Stack:** Next.js (Cloudflare Workers vía OpenNext) | Supabase (BD + pg_cron) | Anthropic Claude API (Sonnet/Opus/Haiku)
 
 ---
 
 ## Arquitectura general
 
 ```
-FRONTEND (Next.js en Vercel)
-├─ Tab USD/CLP: Panel noticias | Cotización + gráficos | Agente (chat)
+FRONTEND (Next.js en Cloudflare Workers via OpenNext)
+├─ Tab USD/CLP: Noticias | Gráfico+Cotización | Factores | Agente (chat)
 └─ Tab futuro: otros instrumentos (misma estructura)
 
-BACKEND (Supabase Edge Functions)
-├─ GET /noticias
-├─ GET /cotizacion
-├─ GET /analisis-historico
-└─ POST /consulta-agente
+BACKEND (Next.js API Routes en Cloudflare Workers)
+├─ GET  /api/noticias
+├─ GET  /api/cotizacion
+├─ GET  /api/historial
+├─ GET  /api/factores
+├─ GET  /api/alertas      POST /api/alertas
+├─ GET  /api/conversacion
+├─ POST /api/consulta-agente
+├─ GET  /api/cron  (llamado por Supabase pg_cron)
+├─ GET  /api/analisis-historico  [PENDIENTE 3.11]
+└─ POST /api/auth  GET /api/auth/logout
 
-CRON JOB (Supabase - cada 15 min)
-└─ Obtiene noticias → clasifica con IA → guarda en BD
+CRON JOB (Supabase pg_cron - cada 5 min)
+├─ Obtiene noticias RSS (6 feeds incl. geopolítica Medio Oriente)
+├─ Obtiene precios: USDCLP (Twelve Data), Cobre/DXY/Petróleo (Yahoo), Fed/TPM (FRED)
+├─ Evalúa reglas de alerta (cobre, DXY, USDCLP)
+└─ Clasifica noticias nuevas con Haiku → genera alertas alto impacto
 
-BASE DE DATOS (Supabase)
-├─ noticias, cotizaciones, analisis, conversaciones
-└─ (diseño detallado: Fase 2)
+BASE DE DATOS (Supabase PostgreSQL)
+├─ instrumentos, factores, fuentes, series
+├─ datos_mercado, noticias, analisis_ia
+├─ reglas_alerta, alertas
+├─ conversaciones, mensajes
+└─ uso_ia (ledger tokens/costo Claude)
 ```
 
 ---
@@ -41,7 +53,7 @@ BASE DE DATOS (Supabase)
 | 1.4  | Conectar carpeta local con GitHub (git init + push)      | ☑        | TÚ     |
 | 1.5  | Crear estructura de carpetas del proyecto                | ☑        | YO     |
 | 1.6  | Crear proyecto en Supabase (para BD)                     | ☑        | TÚ     |
-| 1.7  | Conectar repositorio GitHub con Netlify (deploy automático)| ☑      | TÚ+YO  |
+| 1.7  | Conectar repositorio GitHub con Cloudflare Workers Builds (CI/CD automático) — reemplazó Netlify | ☑ | TÚ+YO |
 
 ---
 
@@ -77,12 +89,12 @@ BASE DE DATOS (Supabase)
 | 3.9  | Crear endpoint GET /api/cotizacion                       | ☑        | YO     |
 | 3.10 | Crear endpoint GET /api/datos-mercado (cobre, DXY, tasas)| ☑        | YO     |
 | 3.11 | Crear endpoint GET /api/analisis-historico               | ☐        | YO     |
-| 3.12 | Configurar Cron Job (Supabase cada 15 min)               | ☑        | TÚ+YO  |
+| 3.12 | Configurar Cron Job (Supabase pg_cron → cada 5 min desde 2026-06-03) | ☑ | TÚ+YO |
 | 3.13 | Guardar noticias, cotización y datos de mercado en BD    | ☑        | YO     |
 | 3.14 | Testing de endpoints y cron (verificar que funciona)     | ☑        | TÚ+YO  |
 | 3.15 | Crear motor de alertas por reglas (cobre, DXY, precio) — integrado al cron| ☑ | YO |
-| 3.16 | Afinar cadencia de feeds críticos para ganar latencia al bróker| ☐  | TÚ+YO  |
-| 3.17 | [Post-MVP] Integrar dato de mercado: Petróleo [Tier 2]   | ☐        | YO     |
+| 3.16 | Afinar cadencia de feeds críticos → cron 5 min + feed geopolítico Medio Oriente agregado | ☑ | TÚ+YO |
+| 3.17 | Integrar dato de mercado: Petróleo [Tier 2] (Yahoo CL=F) | ☑        | YO     |
 | 3.18 | [Post-MVP] Integrar dato de mercado: VIX [Tier 2]        | ☐        | YO     |
 | 3.19 | Crear cuentas/keys de APIs: Twelve Data ☑ FRED ☑ Banco Central (pendiente correo) | ☑* | TÚ |
 
@@ -105,7 +117,7 @@ BASE DE DATOS (Supabase)
 | 4.14 | Briefing descargable para GPT (puente mientras no hay agente)| ☑    | YO     |
 | 4.8  | Responsive (funciona en móvil y desktop)                 | ☑        | YO     |
 | 4.9  | Estructura para segundo tab (otro instrumento, vacío)    | ☐        | YO     |
-| 4.10 | Mostrar alertas en UI (badge/notificación en panel colapsable)| ☐  | YO     |
+| 4.10 | Mostrar alertas en UI (badge/notificación en panel colapsable)| ☑  | YO     |
 | 4.11 | [Post-MVP] Botón "Refresh live" (fetch on-demand de noticias)| ☐   | YO     |
 | 4.12 | Gráfico USD/CLP superpuesto con Cobre/DXY/Petróleo + selector de período (1d/1sem/1mes/3mes) ✓| ☑ | YO  |
 | 4.13 | Pines de noticias en el gráfico — versión interina por palabras clave (mejora con IA en Fase 7)| ☑ | YO |
@@ -166,7 +178,7 @@ BASE DE DATOS (Supabase)
 | 7.1  | Confirmar proveedor de IA → **Anthropic Claude** ✓       | ☑        | TÚ+YO  |
 | 7.10 | Configurar API key y variables de entorno (local ✓ / Cloudflare pendiente)| ☑* | TÚ+YO  |
 | 7.11 | Implementar auth gate: login + middleware ✓ (ya hecho)   | ☑        | YO     |
-| 7.12 | Configurar tope de gasto mensual en proveedor de IA      | ☐        | TÚ     |
+| 7.12 | Configurar tope de gasto mensual en proveedor de IA      | ☑        | TÚ     |
 | 7.14 | Modelo de cada rol en variable de entorno (no hardcode)  | ☑        | YO     |
 | 7.15 | Tabla de uso/costo de tokens (ledger 0005) + registrar cada llamada| ☑ | YO     |
 | 7.2  | Crear endpoint POST /api/consulta-agente (param profundidad: Sonnet/Opus)| ☑ | YO |
@@ -174,30 +186,29 @@ BASE DE DATOS (Supabase)
 | 7.3  | Diseñar prompt del agente (contexto + noticias del día) — v1| ☑     | TÚ+YO  |
 | 7.4  | Conectar chat del frontend con el agente                 | ☑        | YO     |
 | 7.16 | Botón "Análisis profundo" en el chat (dispara Opus)      | ☑        | YO     |
-| 7.5  | Guardar historial de conversaciones en BD                | ☐        | YO     |
+| 7.5  | Guardar historial de conversaciones en BD + multi-turn (Claude recibe últimos 3 intercambios) | ☑ | YO |
 | 7.6  | Testing del agente (calidad de respuestas)               | ☐        | TÚ     |
-| 7.7  | Capacidad de planificación de estrategias (ver docs/estrategia.md)| ☐ | TÚ+YO |
-| 7.8  | Alertas interpretadas por el agente (capa sobre reglas)  | ☐        | YO     |
+| 7.7  | Sistema de trazabilidad de estrategias                   | ☐        | TÚ+YO  |
+| 7.8  | Alertas interpretadas por el agente (capa sobre reglas)  | ☑        | YO     |
 | 7.9  | [Fase 2] Reporting rápido (resumen de fin de semana)     | ☐        | YO     |
 
 ---
 
-## Fase 8: Agregar IA para clasificación de noticias
+## Fase 8: IA para clasificación de noticias
+
+> Clasificador Haiku implementado en `app/lib/clasificador.ts`. Se ejecuta en cada cron.
+> Bug crítico corregido 2026-06-03: el upsert sin UNIQUE constraint silenciaba los inserts.
+> Migración 0006 aplicada (UNIQUE en analisis_ia.noticia_id).
 
 | N°   | Descripción                                              | Realizado | Quién  |
 |------|----------------------------------------------------------|-----------|--------|
-| 8.1  | Elegir modelo para clasificación (mismo proveedor que agente, tier mini)| ☐ | TÚ+YO |
-| 8.2  | Crear prompt para clasificar impacto (alto/medio/bajo)   | ☐        | TÚ+YO  |
-| 8.3  | Crear prompt para detectar factor afectado (ver docs/factores-usd-clp.md)| ☐ | TÚ+YO |
-| 8.4  | Integrar clasificación en el cron job                    | ☐        | YO     |
-| 8.5  | Mostrar clasificación en tarjetas de noticias            | ☐        | YO     |
+| 8.1  | Modelo para clasificación: Haiku (`claude-haiku-4-5-20251001`) | ☑   | TÚ+YO  |
+| 8.2  | Prompt para clasificar impacto (alto/medio/bajo) + confianza | ☑    | TÚ+YO  |
+| 8.3  | Prompt para detectar factor afectado (11 factores: A1–B6) | ☑       | TÚ+YO  |
+| 8.4  | Integración en el cron + alertas automáticas alto impacto ≥0.65 | ☑  | YO     |
+| 8.5  | Mostrar clasificación en tarjetas de noticias (color por impacto) | ☐  | YO     |
 | 8.6  | Testing de calidad de análisis                           | ☐        | TÚ     |
-| 8.7  | Análisis fino de factor-noticia: China [Tier 2]          | ☐        | YO     |
-| 8.8  | Análisis de factor-noticia: Fed/FOMC/macro EE.UU. [Tier 2]| ☐       | YO     |
-| 8.9  | Análisis de factor-noticia: Geopolítica [Tier 2]         | ☐        | YO     |
-| 8.10 | Análisis de factor-noticia: Intervención BCCh [Tier 3]   | ☐        | YO     |
-| 8.11 | Análisis de factor-noticia: Política local/AFP [Tier 3]  | ☐        | YO     |
-| 8.12 | Análisis de factor-noticia: IPC Chile [Tier 3]           | ☐        | YO     |
+| 8.7–8.12 | Análisis fino por factor (China, Fed, Geopolítica, BCCh, AFP, IPC) | ☑ (en prompt) | YO |
 
 ---
 
@@ -210,8 +221,8 @@ BASE DE DATOS (Supabase)
 
 | N°   | Descripción                                              | Realizado | Quién  |
 |------|----------------------------------------------------------|-----------|--------|
-| 9.1  | [Puerta abierta] Modelo + estrategia/factores como config/data, no hardcode | ☐ | YO |
-| 9.2  | [Puerta abierta] Medir tokens/costo por llamada desde el día 1 (= tarea 7.15)| ☐ | YO |
+| 9.1  | [Puerta abierta] Modelo en env var, no hardcode          | ☑        | YO     |
+| 9.2  | [Puerta abierta] Medir tokens/costo por llamada (uso_ia ledger = tarea 7.15) | ☑ | YO |
 | 9.3  | Auth multi-usuario real (Supabase Auth) + RLS por usuario| ☐        | YO     |
 | 9.4  | Estrategias propias por usuario (factores/instrumentos/prompts configurables)| ☐ | YO |
 | 9.5  | Selección de modelo por usuario (ellos eligen Opus = pagan más)| ☐    | YO     |
@@ -219,6 +230,25 @@ BASE DE DATOS (Supabase)
 | 9.7  | Rate limiting + topes duros por usuario (anti-abuso de API key)| ☐    | YO     |
 | 9.8  | Términos de servicio + revisión legal (no asesoría financiera)| ☐     | TÚ     |
 | 9.9  | Ponderación de noticias por difusión/credibilidad del medio (señal pre-IA)| ☐ | YO |
+
+---
+
+---
+
+## Fase 10: Mejoras UX post-MVP (backlog priorizado)
+
+> Definidas 2026-06-03. Diseñadas para ser extensibles a multi-instrumento.
+
+| N°    | Descripción                                                          | Realizado | Quién  |
+|-------|----------------------------------------------------------------------|-----------|--------|
+| 10.1  | Acceso a conversaciones anteriores (selector de chat en PanelAgente) | ☐        | YO     |
+| 10.2  | Sistema de trazabilidad de estrategias (registrar entrada/salida/resultado, vincular con contexto del agente) | ☐ | TÚ+YO |
+| 10.3  | Mostrar clasificación Haiku en tarjetas de noticias (color impacto, factor, dirección) | ☐ | YO |
+| 10.4  | Pines de noticias con color por impacto superpuestos en el gráfico   | ☐        | YO     |
+| 10.5  | Ampliar fuentes geopolíticas (señales de gap: ataques Golfo, OPEC+)  | ☐        | YO     |
+| 10.6  | Segundo tab de instrumento (estructura básica)                        | ☐        | YO     |
+| 10.7  | [Post-MVP] Botón Refresh on-demand de noticias                       | ☐        | YO     |
+| 10.8  | [Post-MVP] BCCh API real para TPM (reemplaza proxy FRED)             | ☐        | TÚ+YO  |
 
 ---
 
