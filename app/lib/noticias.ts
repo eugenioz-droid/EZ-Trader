@@ -7,35 +7,44 @@ const parser = new Parser({
 })
 
 // Feeds RSS configurados (se mueven a tabla fuentes más adelante)
-// NOTA: FXStreet se quitó — bloqueado desde los servidores de Netlify (diagnóstico 2026-06-01).
 const FEEDS = [
-  // Feed rápido intradía (inglés)
+  // Feed rápido intradía — mercados forex (inglés)
   {
     nombre: 'investingLive',
     url: 'https://investinglive.com/feed/news',
     fuente_nombre: 'investingLive (ForexLive)',
     idioma: 'en'
   },
-  // BREAKING: temas que mueven el mercado, últimas horas, inglés (indexa en minutos)
+  // BREAKING: macro/mercados últimas 3h — Fed, China, aranceles, petróleo
   {
     nombre: 'Google News - Breaking mercados',
-    url: 'https://news.google.com/rss/search?q=(Fed+OR+Trump+OR+Iran+OR+tariffs+OR+oil+OR+China)+markets+when:3h&hl=en-US&gl=US&ceid=US:en',
+    url: 'https://news.google.com/rss/search?q=(Fed+OR+Trump+OR+tariffs+OR+oil+OR+China+OR+OPEC+OR+copper)+(markets+OR+economy+OR+dollar)+when:3h&hl=en-US&gl=US&ceid=US:en',
     fuente_nombre: 'Mercados Breaking (Google)',
     idioma: 'en'
   },
-  // Google News (español, limitado a 7 días para frescura)
+  // GEOPOLÍTICA / ENERGÍA: Medio Oriente, conflictos, petróleo — últimas 12h
+  // Capta ataques en Golfo, tensiones Israel/Irán, sanciones, OPEC+
+  {
+    nombre: 'Google News - Geopolítica energía',
+    url: 'https://news.google.com/rss/search?q=(Iran+OR+Israel+OR+Gaza+OR+Saudi+OR+UAE+OR+Gulf+OR+Bahrain+OR+Kuwait+OR+OPEC+OR+"Middle+East")+(oil+OR+attack+OR+war+OR+sanction+OR+tension+OR+missile)+when:12h&hl=en-US&gl=US&ceid=US:en',
+    fuente_nombre: 'Geopolítica Energía (Google)',
+    idioma: 'en'
+  },
+  // USD/CLP — noticias locales en español
   {
     nombre: 'Google News - Dólar Peso Chileno',
     url: 'https://news.google.com/rss/search?q=dolar+peso+chileno+USD+CLP+when:7d&hl=es-419&gl=CL&ceid=CL:es-419',
     fuente_nombre: 'Investing.com USD/CLP',
     idioma: 'es'
   },
+  // Cobre — noticias Chile + precio global
   {
     nombre: 'Google News - Cobre Chile',
     url: 'https://news.google.com/rss/search?q=cobre+precio+Chile+copper+when:7d&hl=es-419&gl=CL&ceid=CL:es-419',
     fuente_nombre: 'Reuters RSS',
     idioma: 'es'
   },
+  // China — demanda cobre, estímulo, economía
   {
     nombre: 'Google News - China economia',
     url: 'https://news.google.com/rss/search?q=China+economia+cobre+estimulo+when:7d&hl=es-419&gl=CL&ceid=CL:es-419',

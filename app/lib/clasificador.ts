@@ -196,7 +196,7 @@ export async function clasificarNoticiasNuevas(): Promise<number> {
     if (rows.length > 0) {
       const { error } = await supabaseAdmin
         .from('analisis_ia')
-        .upsert(rows, { onConflict: 'noticia_id', ignoreDuplicates: false })
+        .insert(rows)
       if (error) {
         console.error('Clasificador: error guardando analisis_ia:', error.message)
       } else {
