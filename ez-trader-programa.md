@@ -83,8 +83,8 @@ BASE DE DATOS (Supabase PostgreSQL)
 | 3.4  | Integrar API financiera USD/CLP (Twelve Data)            | ☑        | YO     |
 | 3.5  | Integrar dato de mercado: Cobre (Yahoo Finance HG=F)     | ☑        | YO     |
 | 3.6  | Integrar dato de mercado: DXY (Yahoo Finance DX-Y.NYB)   | ☑        | YO     |
-| 3.7  | Integrar dato de mercado: Diferencial tasas TPM/Fed [Tier 1]| ☑*    | YO     |
-|      | → Fed: FRED/DFF integrado al cron + backfill ✓. TPM Chile: pendiente fuente (BCCh necesita credenciales) | | |
+| 3.7  | Integrar dato de mercado: Diferencial tasas TPM/Fed [Tier 1]| ☑     | YO     |
+|      | → Fed: FRED/DFF. TPM Chile: **mindicador.cl** (API chilena gratis, sin key, al día) ✓. Reemplazó el proxy FRED lagged y el BCCh que nunca respondió | | |
 | 3.8  | Crear endpoint GET /api/noticias (con filtros)           | ☑        | YO     |
 | 3.9  | Crear endpoint GET /api/cotizacion                       | ☑        | YO     |
 | 3.10 | Crear endpoint GET /api/datos-mercado (cobre, DXY, tasas)| ☑        | YO     |
@@ -250,7 +250,7 @@ BASE DE DATOS (Supabase PostgreSQL)
 | 10.3  | Segundo tab de instrumento (estructura básica)                        | ☐        | YO     |
 | 10.4  | **Ampliar/auditar fuentes de noticias**: revisar qué medios relevantes quedan fuera y sumar RSS directos rápidos (Reuters/Bloomberg markets, económico chileno). Hoy: 1 fuente directa (investingLive) + 5 búsquedas Google News | ☐ | TÚ+YO |
 | 10.5  | [Post-MVP] Botón Refresh on-demand de noticias                       | ☐        | YO     |
-| 10.6  | [Post-MVP] BCCh API real para TPM (reemplaza proxy FRED)             | ☐        | TÚ+YO  |
+| 10.6  | TPM real para TPM → **RESUELTO con mindicador.cl** (no se necesitó el BCCh) | ☑    | YO     |
 
 ---
 

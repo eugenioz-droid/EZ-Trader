@@ -27,9 +27,22 @@ async function obtenerFred(serieFred: string, codigoSerie: string): Promise<Prec
 
 // Tasa Fed (DFF, effective federal funds rate — diaria).
 const obtenerFed = () => obtenerFred('DFF', 'FED')
-// TPM Chile — PROXY: tasa overnight interbancaria (IRSTCI01CLM156N, mensual, ~3m atraso).
-// La TPM exacta/al día requiere la API del BCCh (credenciales pendientes). Swap directo cuando lleguen.
-const obtenerTPM = () => obtenerFred('IRSTCI01CLM156N', 'TPM')
+
+// TPM Chile via mindicador.cl (API chilena gratis, sin key, valor diario AL DÍA).
+// Reemplaza el viejo proxy de FRED (IRSTCI01CLM156N: mensual, ~3m atraso). El BCCh
+// nunca respondió las credenciales; mindicador resuelve la TPM real sin credenciales.
+async function obtenerTPM(): Promise<PrecioDato | null> {
+  const res = await fetch('https://mindicador.cl/api/tpm')
+  if (!res.ok) throw new Error(`mindicador TPM: HTTP ${res.status}`)
+  const data = await res.json()
+  const ultimo = data?.serie?.[0]
+  if (!ultimo || ultimo.valor == null) return null
+  return {
+    codigo_serie: 'TPM',
+    valor: ultimo.valor,
+    fecha_dato: new Date().toISOString(),
+  }
+}
 
 // USD/CLP via Twelve Data
 async function obtenerUSDCLP(): Promise<PrecioDato | null> {
