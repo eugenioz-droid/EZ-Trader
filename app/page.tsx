@@ -68,31 +68,48 @@ export default async function Home({
         </div>
       </div>
 
-      {/* Móvil: cotización primero — las noticias quedan abajo en el mismo grid */}
-      <div className="lg:hidden border-b border-line">
-        <Suspense fallback={<CargandoPanel texto="Cargando mercado..." />}>
-          <PanelCotizacion />
-        </Suspense>
-        <Suspense fallback={null}>
-          <HistorialCotizacion />
-        </Suspense>
-        <Suspense fallback={<CargandoPanel texto="Cargando factores..." />}>
-          <PanelFactores />
-        </Suspense>
-      </div>
+      {/* ===== DESKTOP LAYOUT (lg+) ===== */}
+      <div className="hidden lg:grid lg:grid-cols-12 lg:h-[calc(100vh-162px)]">
 
-      {/* Layout principal — el gráfico/mercado es el centro analítico (más ancho) */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-0 lg:h-[calc(100vh-162px)]">
+        {/* Zona izquierda 8 cols: gráfico arriba + noticias/factores abajo */}
+        <div className="col-span-8 flex flex-col border-r border-line overflow-hidden">
 
-        {/* Noticias (más angosto — Haiku las filtrará en Fase 8) */}
-        <div className="lg:col-span-3 border-r border-line lg:overflow-y-auto">
-          <Suspense fallback={<CargandoPanel texto="Cargando noticias..." />}>
-            <PanelNoticias fuente={fuente} impacto={impacto} />
-          </Suspense>
+          {/* Gráfico — 60% de la altura */}
+          <div className="flex-[3] overflow-y-auto border-b border-line min-h-0">
+            <Suspense fallback={<CargandoPanel texto="Cargando mercado..." />}>
+              <PanelCotizacion />
+            </Suspense>
+            <Suspense fallback={null}>
+              <HistorialCotizacion />
+            </Suspense>
+          </div>
+
+          {/* Noticias + Factores lado a lado — 40% de la altura */}
+          <div className="flex-[2] grid grid-cols-2 overflow-hidden min-h-0">
+            <div className="border-r border-line overflow-y-auto">
+              <Suspense fallback={<CargandoPanel texto="Cargando noticias..." />}>
+                <PanelNoticias fuente={fuente} impacto={impacto} />
+              </Suspense>
+            </div>
+            <div className="overflow-y-auto">
+              <Suspense fallback={<CargandoPanel texto="Cargando factores..." />}>
+                <PanelFactores />
+              </Suspense>
+            </div>
+          </div>
+
         </div>
 
-        {/* Cotización + Gráfico + Factores (desktop) — columna principal */}
-        <div className="hidden lg:block lg:col-span-6 border-r border-line overflow-y-auto">
+        {/* Agente — 4 cols, altura completa */}
+        <div className="col-span-4 flex flex-col overflow-hidden">
+          <PanelAgente />
+        </div>
+
+      </div>
+
+      {/* ===== MÓVIL LAYOUT (< lg) ===== */}
+      <div className="lg:hidden">
+        <div className="border-b border-line">
           <Suspense fallback={<CargandoPanel texto="Cargando mercado..." />}>
             <PanelCotizacion />
           </Suspense>
@@ -103,12 +120,12 @@ export default async function Home({
             <PanelFactores />
           </Suspense>
         </div>
-
-        {/* Agente */}
-        <div className="lg:col-span-3 lg:overflow-y-auto border-t lg:border-t-0 border-line">
+        <Suspense fallback={<CargandoPanel texto="Cargando noticias..." />}>
+          <PanelNoticias fuente={fuente} impacto={impacto} />
+        </Suspense>
+        <div className="border-t border-line">
           <PanelAgente />
         </div>
-
       </div>
     </div>
   )

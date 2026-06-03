@@ -24,7 +24,7 @@ const AGENTES: Record<Modo, { etiqueta: string; modelo: string; nota: string }> 
 }
 
 export default function PanelAgente() {
-  const [abierto, setAbierto] = useState(false)
+  const [abierto, setAbierto] = useState(true)
   const [modo, setModo] = useState<Modo>('normal')
   const [menuAbierto, setMenuAbierto] = useState(false)
   const [mensajes, setMensajes] = useState<Mensaje[]>([
@@ -108,9 +108,10 @@ export default function PanelAgente() {
   const agente = AGENTES[modo]
 
   return (
-    <div className="flex flex-col h-full">
+    <div className="flex flex-col h-full overflow-hidden">
+      {/* Header — colapsable */}
       <div
-        className="sticky top-0 bg-panel border-b border-line px-4 py-3 flex items-center justify-between cursor-pointer hover:bg-elevated"
+        className="shrink-0 bg-panel border-b border-line px-4 py-3 flex items-center justify-between cursor-pointer hover:bg-elevated z-10"
         onClick={() => setAbierto(!abierto)}
       >
         <div className="flex items-center gap-2">
@@ -121,105 +122,114 @@ export default function PanelAgente() {
       </div>
 
       {abierto && (
-        <div className="flex-1 flex flex-col p-4">
-          <div className="flex-1 bg-panel rounded-lg p-4 mb-4 min-h-48 max-h-96 overflow-y-auto border border-line space-y-3">
-            {mensajes.map((m, i) => (
-              <div
-                key={i}
-                className={m.rol === 'user' ? 'flex justify-end' : 'flex justify-start'}
-              >
+        <div className="flex-1 flex flex-col overflow-hidden min-h-0">
+
+          {/* Mensajes — ocupa todo el espacio disponible sobre los controles */}
+          <div className="flex-1 overflow-y-auto min-h-0 px-4 pt-4 pb-2">
+            <div className="bg-panel rounded-lg p-4 border border-line space-y-3 h-full">
+              {mensajes.map((m, i) => (
                 <div
-                  className={
-                    m.rol === 'user'
-                      ? 'bg-brandDark/30 rounded-lg px-3 py-2 text-sm text-silver max-w-[85%] whitespace-pre-wrap'
-                      : 'bg-elevated rounded-lg px-3 py-2 text-sm text-silver max-w-[85%] whitespace-pre-wrap'
-                  }
+                  key={i}
+                  className={m.rol === 'user' ? 'flex justify-end' : 'flex justify-start'}
                 >
-                  {m.texto}
-                  {m.modelo && (
-                    <div className="text-muted text-[10px] mt-1 opacity-60">{m.modelo}</div>
-                  )}
+                  <div
+                    className={
+                      m.rol === 'user'
+                        ? 'bg-brandDark/30 rounded-lg px-3 py-2 text-sm text-silver max-w-[85%] whitespace-pre-wrap'
+                        : 'bg-elevated rounded-lg px-3 py-2 text-sm text-silver max-w-[85%] whitespace-pre-wrap'
+                    }
+                  >
+                    {m.texto}
+                    {m.modelo && (
+                      <div className="text-muted text-[10px] mt-1 opacity-60">{m.modelo}</div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
-            {cargando && (
-              <div className="flex justify-start">
-                <div className="bg-elevated rounded-lg px-3 py-2 text-sm text-muted">
-                  {esProfundo ? 'Analizando a fondo…' : 'Analizando…'}
+              ))}
+              {cargando && (
+                <div className="flex justify-start">
+                  <div className="bg-elevated rounded-lg px-3 py-2 text-sm text-muted">
+                    {esProfundo ? 'Analizando a fondo…' : 'Analizando…'}
+                  </div>
                 </div>
-              </div>
-            )}
-            <div ref={finRef} />
+              )}
+              <div ref={finRef} />
+            </div>
           </div>
 
-          {/* Selector de agente */}
-          <div className="relative mb-2" ref={menuRef}>
-            <button
-              onClick={() => setMenuAbierto((v) => !v)}
-              className="w-full flex items-center justify-between bg-panel border border-line rounded-lg px-3 py-2 text-sm text-silver hover:border-brand/50"
-            >
-              <span className="flex items-center gap-2">
-                <span className={`h-2 w-2 rounded-full ${esProfundo ? 'bg-amber-400' : 'bg-brand'}`}></span>
-                Agente: <span className="font-medium">{agente.etiqueta}</span>
-                <span className="text-muted">· {agente.modelo}</span>
-              </span>
-              <span className="text-muted text-xs">{menuAbierto ? '▲' : '▼'}</span>
-            </button>
+          {/* Controles — tamaño natural, pegado al fondo */}
+          <div className="shrink-0 flex flex-col gap-2 px-4 pb-4 pt-2">
 
-            {menuAbierto && (
-              <div className="absolute bottom-full mb-1 w-full bg-elevated border border-line rounded-lg overflow-hidden shadow-lg z-10">
-                {(Object.keys(AGENTES) as Modo[]).map((m) => {
-                  const a = AGENTES[m]
-                  const activo = m === modo
-                  return (
-                    <button
-                      key={m}
-                      onClick={() => {
-                        setModo(m)
-                        setMenuAbierto(false)
-                      }}
-                      className={`w-full text-left px-3 py-2 hover:bg-panel ${activo ? 'bg-panel' : ''}`}
-                    >
-                      <div className="flex items-center gap-2 text-sm text-silver">
-                        <span className={`h-2 w-2 rounded-full ${m === 'profunda' ? 'bg-amber-400' : 'bg-brand'}`}></span>
-                        <span className="font-medium">{a.etiqueta}</span>
-                        <span className="text-muted">· {a.modelo}</span>
-                        {activo && <span className="ml-auto text-brand text-xs">✓</span>}
-                      </div>
-                      <div className="text-muted text-[11px] mt-0.5 ml-4">{a.nota}</div>
-                    </button>
-                  )
-                })}
-              </div>
-            )}
-          </div>
+            {/* Selector de agente */}
+            <div className="relative" ref={menuRef}>
+              <button
+                onClick={() => setMenuAbierto((v) => !v)}
+                className="w-full flex items-center justify-between bg-panel border border-line rounded-lg px-3 py-2 text-sm text-silver hover:border-brand/50"
+              >
+                <span className="flex items-center gap-2">
+                  <span className={`h-2 w-2 rounded-full ${esProfundo ? 'bg-amber-400' : 'bg-brand'}`}></span>
+                  Agente: <span className="font-medium">{agente.etiqueta}</span>
+                  <span className="text-muted">· {agente.modelo}</span>
+                </span>
+                <span className="text-muted text-xs">{menuAbierto ? '▲' : '▼'}</span>
+              </button>
 
-          {/* Input + Enviar */}
-          <div className="flex gap-2 items-end">
-            <textarea
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={onKeyDown}
-              onInput={onInput}
-              disabled={cargando}
-              rows={3}
-              placeholder={`Pregunta sobre el mercado USD/CLP…\n(Enter envía · Shift+Enter = salto de línea)`}
-              className="flex-1 bg-panel border border-line rounded-lg px-3 py-2 text-sm text-silver placeholder:text-muted/60 focus:outline-none focus:border-brand disabled:opacity-50 resize-none overflow-hidden leading-relaxed"
-              style={{ minHeight: '72px', maxHeight: '160px' }}
-            />
-            <button
-              onClick={enviar}
-              disabled={cargando || !input.trim()}
-              className={`px-3 py-2 rounded-lg text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0 ${
-                esProfundo
-                  ? 'bg-amber-400 text-black hover:bg-amber-300'
-                  : 'bg-brand text-black hover:bg-brand/90'
-              }`}
-            >
-              {esProfundo ? '🔍 Opus' : 'Enviar'}
-            </button>
+              {menuAbierto && (
+                <div className="absolute bottom-full mb-1 w-full bg-elevated border border-line rounded-lg overflow-hidden shadow-lg z-10">
+                  {(Object.keys(AGENTES) as Modo[]).map((m) => {
+                    const a = AGENTES[m]
+                    const activo = m === modo
+                    return (
+                      <button
+                        key={m}
+                        onClick={() => {
+                          setModo(m)
+                          setMenuAbierto(false)
+                        }}
+                        className={`w-full text-left px-3 py-2 hover:bg-panel ${activo ? 'bg-panel' : ''}`}
+                      >
+                        <div className="flex items-center gap-2 text-sm text-silver">
+                          <span className={`h-2 w-2 rounded-full ${m === 'profunda' ? 'bg-amber-400' : 'bg-brand'}`}></span>
+                          <span className="font-medium">{a.etiqueta}</span>
+                          <span className="text-muted">· {a.modelo}</span>
+                          {activo && <span className="ml-auto text-brand text-xs">✓</span>}
+                        </div>
+                        <div className="text-muted text-[11px] mt-0.5 ml-4">{a.nota}</div>
+                      </button>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+
+            {/* Input + Enviar */}
+            <div className="flex gap-2 items-end">
+              <textarea
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={onKeyDown}
+                onInput={onInput}
+                disabled={cargando}
+                rows={3}
+                placeholder={`Pregunta sobre el mercado USD/CLP…\n(Enter envía · Shift+Enter = salto de línea)`}
+                className="flex-1 bg-panel border border-line rounded-lg px-3 py-2 text-sm text-silver placeholder:text-muted/60 focus:outline-none focus:border-brand disabled:opacity-50 resize-none overflow-hidden leading-relaxed"
+                style={{ minHeight: '72px', maxHeight: '160px' }}
+              />
+              <button
+                onClick={enviar}
+                disabled={cargando || !input.trim()}
+                className={`px-3 py-2 rounded-lg text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0 ${
+                  esProfundo
+                    ? 'bg-amber-400 text-black hover:bg-amber-300'
+                    : 'bg-brand text-black hover:bg-brand/90'
+                }`}
+              >
+                {esProfundo ? '🔍 Opus' : 'Enviar'}
+              </button>
+            </div>
+            <p className="text-[10px] text-muted/40 text-right">Enter envía · Shift+Enter = nueva línea</p>
+
           </div>
-          <p className="text-[10px] text-muted/40 text-right mt-1">Enter envía · Shift+Enter = nueva línea</p>
         </div>
       )}
     </div>
