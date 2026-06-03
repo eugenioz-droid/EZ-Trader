@@ -188,7 +188,7 @@ BASE DE DATOS (Supabase PostgreSQL)
 | 7.16 | Botón "Análisis profundo" en el chat (dispara Opus)      | ☑        | YO     |
 | 7.5  | Guardar historial de conversaciones en BD + multi-turn (Claude recibe últimos 3 intercambios) | ☑ | YO |
 | 7.6  | Testing del agente (calidad de respuestas)               | ☐        | TÚ     |
-| 7.7  | Sistema de trazabilidad de estrategias                   | ☐        | TÚ+YO  |
+| 7.7  | Sistema de trazabilidad de estrategias → **MOVIDO a Fase 11** (consolidado)| ➡️ | TÚ+YO  |
 | 7.8  | Alertas interpretadas por el agente (capa sobre reglas)  | ☑        | YO     |
 | 7.9  | [Fase 2] Reporting rápido (resumen de fin de semana)     | ☐        | YO     |
 
@@ -214,10 +214,15 @@ BASE DE DATOS (Supabase PostgreSQL)
 
 ## Fase 9: [FUTURO] Producto comercial multi-usuario (SaaS)
 
-> Visión a futuro (no se construye ahora). La herramienta personal y el producto comercial
-> son **el mismo código en distintas etapas** si se toman ciertas decisiones baratas desde ya.
-> Decidido 2026-06-02: priorizar 9.1 y 9.2 (costo bajo, evitan reescritura) aunque el SaaS
-> quede lejos. Mantener el descargo de "no es asesoría financiera" en todo (ver docs/estrategia.md).
+> Visión a futuro. La herramienta personal y el producto comercial son **el mismo código
+> en distintas etapas** si se toman decisiones baratas desde ya (9.1 y 9.2 ya hechas).
+> Mantener el descargo de "no es asesoría financiera" en todo (ver docs/estrategia.md).
+>
+> **PUENTE CLAVE (decidido 2026-06-03):** el Sistema de Estrategias (Fase 11) es el natural
+> punto de entrada al multi-usuario. Al construirlo, su modelo de datos debe quedar
+> **multi-user-ready desde el día 1** (columna `usuario_id` nullable + diseño con RLS en
+> mente), aunque el login multi-usuario real (9.3) se construya después. Misma filosofía
+> de "puerta abierta" que 9.1/9.2: costo casi nulo ahora, evita reescritura después.
 
 | N°   | Descripción                                              | Realizado | Quién  |
 |------|----------------------------------------------------------|-----------|--------|
@@ -233,22 +238,38 @@ BASE DE DATOS (Supabase PostgreSQL)
 
 ---
 
----
-
-## Fase 10: Mejoras UX post-MVP (backlog priorizado)
+## Fase 10: Mejoras UX post-MVP (backlog)
 
 > Definidas 2026-06-03. Diseñadas para ser extensibles a multi-instrumento.
+> El sistema de estrategias se separó a Fase 11 (era 10.2 + 7.7 duplicados).
 
 | N°    | Descripción                                                          | Realizado | Quién  |
 |-------|----------------------------------------------------------------------|-----------|--------|
 | 10.1  | Acceso a conversaciones anteriores (selector de chat en PanelAgente) | ☐        | YO     |
-| 10.2  | Sistema de trazabilidad de estrategias (registrar entrada/salida/resultado, vincular con contexto del agente) | ☐ | TÚ+YO |
-| 10.3  | Mostrar clasificación Haiku en tarjetas de noticias (color impacto, factor, dirección) | ☐ | YO |
-| 10.4  | Pines de noticias con color por impacto superpuestos en el gráfico   | ☐        | YO     |
-| 10.5  | Ampliar fuentes geopolíticas (señales de gap: ataques Golfo, OPEC+)  | ☐        | YO     |
-| 10.6  | Segundo tab de instrumento (estructura básica)                        | ☐        | YO     |
-| 10.7  | [Post-MVP] Botón Refresh on-demand de noticias                       | ☐        | YO     |
-| 10.8  | [Post-MVP] BCCh API real para TPM (reemplaza proxy FRED)             | ☐        | TÚ+YO  |
+| 10.2  | Pines de noticias con color por impacto superpuestos en el gráfico   | ☐        | YO     |
+| 10.3  | Segundo tab de instrumento (estructura básica)                        | ☐        | YO     |
+| 10.4  | **Ampliar/auditar fuentes de noticias**: revisar qué medios relevantes quedan fuera y sumar RSS directos rápidos (Reuters/Bloomberg markets, económico chileno). Hoy: 1 fuente directa (investingLive) + 5 búsquedas Google News | ☐ | TÚ+YO |
+| 10.5  | [Post-MVP] Botón Refresh on-demand de noticias                       | ☐        | YO     |
+| 10.6  | [Post-MVP] BCCh API real para TPM (reemplaza proxy FRED)             | ☐        | TÚ+YO  |
+
+---
+
+## Fase 11: Sistema de Estrategias (trazabilidad + base multi-usuario)
+
+> Consolida lo que estaba duplicado en 7.7 y 10.2. Es el **puente al SaaS (Fase 9)**:
+> se construye multi-user-ready (columna `usuario_id` nullable desde el día 1) aunque
+> el usuario hoy sea uno solo. Permite registrar tesis de entrada, gestionar el ciclo
+> de vida de una operación y medir resultados — base para que el agente aprenda del
+> historial del usuario y, a futuro, para estrategias por usuario en el SaaS.
+
+| N°    | Descripción                                                          | Realizado | Quién  |
+|-------|----------------------------------------------------------------------|-----------|--------|
+| 11.1  | Diseño de tabla `estrategias`/`operaciones` (instrumento, sesgo, entrada, stop, target, tesis, estado, resultado) + `usuario_id` nullable | ☐ | TÚ+YO |
+| 11.2  | Migración + endpoints CRUD (crear/listar/cerrar operación)           | ☐        | YO     |
+| 11.3  | UI: panel "Mis estrategias" (registrar entrada con tesis, ver abiertas/cerradas, P&L) | ☐ | YO |
+| 11.4  | Vincular operación con contexto del momento (factores + noticias + respuesta del agente) | ☐ | YO |
+| 11.5  | Que el agente lea el historial de estrategias del usuario en su contexto | ☐    | YO     |
+| 11.6  | [Multi-instrumento] Estrategias por instrumento (ya soportado por diseño) | ☐   | YO     |
 
 ---
 
