@@ -70,18 +70,19 @@ export default function GraficoInteractivo({
   // Ejes de tiempo adaptativos
   const spanD = span / 86400000
   const ticks: number[] = []
+  // Fronteras calculadas con aritmética de epoch UTC (NO new Date().setHours, que
+  // usa la zona horaria del runtime: server en UTC vs cliente en Santiago daban
+  // ticks distintos → hydration mismatch React #418). Las etiquetas se muestran en
+  // hora de Santiago vía toLocaleString (timeZone explícito = determinista).
   if (spanD <= 2) {
     // por horas
-    const stepH = spanD <= 0.8 ? 1 : 2
-    const d = new Date(t0); d.setMinutes(0, 0, 0)
-    let h = d.getTime(); if (h < t0) h += 3600000
-    for (; h <= t1; h += stepH * 3600000) ticks.push(h)
+    const stepMs = (spanD <= 0.8 ? 1 : 2) * 3600000
+    for (let h = Math.ceil(t0 / 3600000) * 3600000; h <= t1; h += stepMs) ticks.push(h)
   } else {
     // por días
     const stepD = spanD <= 10 ? 1 : spanD <= 35 ? 5 : 14
-    const d = new Date(t0); d.setHours(0, 0, 0, 0)
-    let day = d.getTime(); if (day < t0) day += 86400000
-    for (; day <= t1; day += stepD * 86400000) ticks.push(day)
+    const stepMs = stepD * 86400000
+    for (let day = Math.ceil(t0 / 86400000) * 86400000; day <= t1; day += stepMs) ticks.push(day)
   }
   const labelEvery = Math.max(1, Math.ceil(ticks.length / 7))
   const fmtTick = (t: number) => {
