@@ -16,9 +16,9 @@ export const dynamic = 'force-dynamic'
 export default async function Home({
   searchParams,
 }: {
-  searchParams: Promise<{ fuente?: string }>
+  searchParams: Promise<{ fuente?: string; impacto?: string }>
 }) {
-  await searchParams
+  const { fuente, impacto } = await searchParams
 
   return (
     <div className="min-h-screen bg-base text-snow">
@@ -68,7 +68,7 @@ export default async function Home({
         </div>
       </div>
 
-      {/* Móvil: cotización primero */}
+      {/* Móvil: cotización primero — las noticias quedan abajo en el mismo grid */}
       <div className="lg:hidden border-b border-line">
         <Suspense fallback={<CargandoPanel texto="Cargando mercado..." />}>
           <PanelCotizacion />
@@ -87,7 +87,7 @@ export default async function Home({
         {/* Noticias (más angosto — Haiku las filtrará en Fase 8) */}
         <div className="lg:col-span-3 border-r border-line lg:overflow-y-auto">
           <Suspense fallback={<CargandoPanel texto="Cargando noticias..." />}>
-            <PanelNoticias />
+            <PanelNoticias fuente={fuente} impacto={impacto} />
           </Suspense>
         </div>
 

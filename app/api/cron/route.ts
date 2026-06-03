@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { obtenerNoticias, guardarNoticias } from '@/app/lib/noticias'
 import { obtenerPrecios, guardarPrecios } from '@/app/lib/mercado'
 import { evaluarAlertas } from '@/app/lib/alertas'
+import { clasificarNoticiasNuevas } from '@/app/lib/clasificador'
 
 // Clave secreta para que solo Supabase pueda llamar este endpoint
 const CRON_SECRET = process.env.CRON_SECRET
@@ -40,6 +41,14 @@ export async function GET(req: NextRequest) {
     resultados.alertas = { nuevas: alertasNuevas }
   } catch (err) {
     resultados.alertas = { error: String(err) }
+  }
+
+  // 4. Clasificar noticias nuevas con Haiku (solo las que no tienen análisis aún)
+  try {
+    const clasificadas = await clasificarNoticiasNuevas()
+    resultados.clasificacion = { clasificadas }
+  } catch (err) {
+    resultados.clasificacion = { error: String(err) }
   }
 
   resultados.duracion_ms = Date.now() - inicio
