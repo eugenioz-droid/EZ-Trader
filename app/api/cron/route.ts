@@ -40,8 +40,13 @@ export async function GET(req: NextRequest) {
   // 3. Obtener y guardar precios de mercado (cada fetch con timeout)
   try {
     const precios = await obtenerPrecios()
-    const guardados = await guardarPrecios(precios)
-    resultados.precios = { obtenidos: precios.length, guardados, valores: precios.map(p => ({ serie: p.codigo_serie, valor: p.valor })) }
+    const { guardados, rechazados } = await guardarPrecios(precios)
+    resultados.precios = {
+      obtenidos: precios.length,
+      guardados,
+      valores: precios.map(p => ({ serie: p.codigo_serie, valor: p.valor })),
+      ...(rechazados.length > 0 ? { rechazados } : {}),
+    }
   } catch (err) {
     resultados.precios = { error: String(err) }
   }

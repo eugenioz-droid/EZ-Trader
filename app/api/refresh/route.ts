@@ -21,8 +21,12 @@ export async function POST() {
 
   try {
     const precios = await obtenerPrecios()
-    const guardados = await guardarPrecios(precios)
-    resultados.precios = { obtenidos: precios.length, guardados }
+    const { guardados, rechazados } = await guardarPrecios(precios)
+    resultados.precios = {
+      obtenidos: precios.length,
+      guardados,
+      ...(rechazados.length > 0 ? { rechazados } : {}),
+    }
   } catch (err) {
     resultados.precios = { error: String(err) }
   }

@@ -255,7 +255,7 @@ BASE DE DATOS (Supabase PostgreSQL)
 | 10.8  | **[Robustez C] Visibilidad del cron**: tabla `cron_runs` (migración 0007) registra cada corrida (duración, ok, errores por paso) + indicador en header (punto verde/ámbar/rojo con detalle). Surface fallos silenciosos en vez de perderlos en logs | ☑ | YO |
 | 10.9  | **[Fix raíz] Clasificador con NOT IN gigante**: la URL con cientos de IDs hacía que PostgREST ignorara el ORDER BY → noticias nuevas nunca se clasificaban (sin badges). Reescrito con pool de 80 recientes + IN acotado | ☑ | YO |
 | 10.10 | **[Fix raíz] Cron tardaba 48s**: fetches de mercado sin timeout (Stooq se cuelga en Workers) → pg_cron cortaba antes de clasificar. Timeout 6s por fetch + clasificación movida antes de precios | ☑ | YO |
-| 10.11 | [Robustez D] Validar datos antes de guardar (rechazar fecha futura / valores absurdos) — pendiente, prioridad baja | ☐ | YO |
+| 10.11 | **[Robustez D] Validar datos antes de guardar** ✓: `guardarPrecios` rechaza fecha futura (>10min), valor no-positivo y saltos absurdos (>10x o <0.1x vs último = error de unidad/glitch). Los rechazos quedan en el detalle del cron (visible vía C) | ☑ | YO |
 
 ---
 

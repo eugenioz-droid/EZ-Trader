@@ -124,23 +124,76 @@ export async function obtenerPrecios(): Promise<PrecioDato[]> {
   return precios
 }
 
-export async function guardarPrecios(precios: PrecioDato[]): Promise<number> {
-  if (precios.length === 0) return 0
+export interface ResultadoGuardado {
+  guardados: number
+  rechazados: { serie: string; valor: number; motivo: string }[]
+}
 
-  const { data: series } = await supabaseAdmin
-    .from('series')
-    .select('id, codigo')
+const MAX_FUTURO_MS = 10 * 60 * 1000 // tolerancia hacia el futuro (relojes desfasados)
 
-  const serieMap = new Map(series?.map(s => [s.codigo, s.id]) ?? [])
+// Guarda precios VALIDANDO antes (robustez D): rechaza fecha futura, valor no-positivo
+// y saltos absurdos vs el último valor (error de unidad/glitch, ej. cobre ¢ vs $).
+export async function guardarPrecios(precios: PrecioDato[]): Promise<ResultadoGuardado> {
+  const rechazados: ResultadoGuardado['rechazados'] = []
+  if (precios.length === 0) return { guardados: 0, rechazados }
 
-  const rows = precios
-    .filter(p => serieMap.has(p.codigo_serie))
-    .map(p => ({
-      serie_id: serieMap.get(p.codigo_serie)!,
+  const { data: series } = await supabaseAdmin.from('series').select('id, codigo')
+  const serieMap = new Map(series?.map((s) => [s.codigo, s.id]) ?? [])
+
+  // Último valor conocido por serie (para detectar outliers).
+  const idsRelevantes = precios
+    .map((p) => serieMap.get(p.codigo_serie))
+    .filter((x): x is number => x != null)
+  const ultimoPorSerie = new Map<number, number>()
+  await Promise.all(
+    idsRelevantes.map(async (id) => {
+      const { data } = await supabaseAdmin
+        .from('datos_mercado')
+        .select('valor')
+        .eq('serie_id', id)
+        .order('fecha_dato', { ascending: false })
+        .limit(1)
+        .maybeSingle()
+      if (data?.valor != null) ultimoPorSerie.set(id, data.valor)
+    }),
+  )
+
+  const ahora = Date.now()
+  const rows: { serie_id: number; valor: number; fecha_dato: string; capturado_at: string }[] = []
+
+  for (const p of precios) {
+    const serieId = serieMap.get(p.codigo_serie)
+    if (serieId == null) continue
+
+    if (!Number.isFinite(p.valor) || p.valor <= 0) {
+      rechazados.push({ serie: p.codigo_serie, valor: p.valor, motivo: 'valor no positivo o inválido' })
+      continue
+    }
+    if (new Date(p.fecha_dato).getTime() > ahora + MAX_FUTURO_MS) {
+      rechazados.push({ serie: p.codigo_serie, valor: p.valor, motivo: 'fecha en el futuro' })
+      continue
+    }
+    const ult = ultimoPorSerie.get(serieId)
+    if (ult != null && ult > 0) {
+      const ratio = p.valor / ult
+      if (ratio > 10 || ratio < 0.1) {
+        rechazados.push({ serie: p.codigo_serie, valor: p.valor, motivo: `salto absurdo vs último (${ult})` })
+        continue
+      }
+    }
+
+    rows.push({
+      serie_id: serieId,
       valor: p.valor,
       fecha_dato: p.fecha_dato,
-      capturado_at: new Date().toISOString()
-    }))
+      capturado_at: new Date().toISOString(),
+    })
+  }
+
+  if (rechazados.length > 0) {
+    console.warn('Precios rechazados por validación:', JSON.stringify(rechazados))
+  }
+  if (rows.length === 0) return { guardados: 0, rechazados }
 
   const { data, error } = await supabaseAdmin
     .from('datos_mercado')
@@ -149,8 +202,8 @@ export async function guardarPrecios(precios: PrecioDato[]): Promise<number> {
 
   if (error) {
     console.error('Error guardando precios:', error.message)
-    return 0
+    return { guardados: 0, rechazados }
   }
 
-  return data?.length ?? 0
+  return { guardados: data?.length ?? 0, rechazados }
 }
