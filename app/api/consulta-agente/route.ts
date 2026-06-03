@@ -59,11 +59,19 @@ async function guardarMensajes(
     { conversacion_id, rol: 'user', contenido: pregunta },
     { conversacion_id, rol: 'assistant', contenido: respuesta, modelo_usado: modelo, tokens: tokens_out },
   ])
-  // Actualiza updated_at de la conversación
-  await supabaseAdmin
+  // Título desde la primera pregunta (si la conversación aún no tiene uno) + updated_at.
+  const { data: conv } = await supabaseAdmin
     .from('conversaciones')
-    .update({ updated_at: new Date().toISOString() })
+    .select('titulo')
     .eq('id', conversacion_id)
+    .single()
+  const updates: { updated_at: string; titulo?: string } = {
+    updated_at: new Date().toISOString(),
+  }
+  if (!conv?.titulo || conv.titulo === 'Chat USD/CLP') {
+    updates.titulo = pregunta.length > 50 ? pregunta.slice(0, 50) + '…' : pregunta
+  }
+  await supabaseAdmin.from('conversaciones').update(updates).eq('id', conversacion_id)
 }
 
 // 7.8 — Genera una alerta si la respuesta contiene una señal accionable
