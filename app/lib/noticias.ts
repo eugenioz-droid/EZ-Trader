@@ -6,51 +6,46 @@ const parser = new Parser({
   headers: { 'User-Agent': 'Mozilla/5.0 (EZ-Trader/1.0)' }
 })
 
-// Feeds RSS configurados (se mueven a tabla fuentes más adelante)
+// Feeds RSS. Mezcla auditada (2026-06-03): fuentes rápidas/primarias + 2 búsquedas
+// locales de Google (CLP y cobre, sin buen equivalente gratis en español). Se podaron
+// las 3 búsquedas en inglés de Google (Breaking/Geopolítica/China): Financial Juice +
+// investingLive + Fed cubren global/macro/geopolítica más rápido y con mejor calidad.
 const FEEDS = [
+  // Squawk en tiempo real — titulares que mueven el mercado (inglés). Baja latencia.
+  {
+    nombre: 'Financial Juice',
+    url: 'https://www.financialjuice.com/feed.ashx?xy=rss',
+    fuente_nombre: 'Financial Juice',
+    idioma: 'en',
+  },
   // Feed rápido intradía — mercados forex (inglés)
   {
     nombre: 'investingLive',
     url: 'https://investinglive.com/feed/news',
     fuente_nombre: 'investingLive (ForexLive)',
-    idioma: 'en'
+    idioma: 'en',
   },
-  // BREAKING: macro/mercados últimas 3h — Fed, China, aranceles, petróleo
+  // FUENTE PRIMARIA: Reserva Federal — comunicados de política monetaria
   {
-    nombre: 'Google News - Breaking mercados',
-    url: 'https://news.google.com/rss/search?q=(Fed+OR+Trump+OR+tariffs+OR+oil+OR+China+OR+OPEC+OR+copper)+(markets+OR+economy+OR+dollar)+when:3h&hl=en-US&gl=US&ceid=US:en',
-    fuente_nombre: 'Mercados Breaking (Google)',
-    idioma: 'en'
+    nombre: 'Federal Reserve - Monetary',
+    url: 'https://www.federalreserve.gov/feeds/press_monetary.xml',
+    fuente_nombre: 'Federal Reserve RSS',
+    idioma: 'en',
   },
-  // GEOPOLÍTICA / ENERGÍA: Medio Oriente, conflictos, petróleo — últimas 12h
-  // Capta ataques en Golfo, tensiones Israel/Irán, sanciones, OPEC+
-  {
-    nombre: 'Google News - Geopolítica energía',
-    url: 'https://news.google.com/rss/search?q=(Iran+OR+Israel+OR+Gaza+OR+Saudi+OR+UAE+OR+Gulf+OR+Bahrain+OR+Kuwait+OR+OPEC+OR+"Middle+East")+(oil+OR+attack+OR+war+OR+sanction+OR+tension+OR+missile)+when:12h&hl=en-US&gl=US&ceid=US:en',
-    fuente_nombre: 'Geopolítica Energía (Google)',
-    idioma: 'en'
-  },
-  // USD/CLP — noticias locales en español
+  // USD/CLP — noticias locales en español (Google, sin alternativa gratis equivalente)
   {
     nombre: 'Google News - Dólar Peso Chileno',
     url: 'https://news.google.com/rss/search?q=dolar+peso+chileno+USD+CLP+when:7d&hl=es-419&gl=CL&ceid=CL:es-419',
     fuente_nombre: 'Investing.com USD/CLP',
-    idioma: 'es'
+    idioma: 'es',
   },
-  // Cobre — noticias Chile + precio global
+  // Cobre — noticias Chile + precio global (Google local)
   {
     nombre: 'Google News - Cobre Chile',
     url: 'https://news.google.com/rss/search?q=cobre+precio+Chile+copper+when:7d&hl=es-419&gl=CL&ceid=CL:es-419',
     fuente_nombre: 'Reuters RSS',
-    idioma: 'es'
+    idioma: 'es',
   },
-  // China — demanda cobre, estímulo, economía
-  {
-    nombre: 'Google News - China economia',
-    url: 'https://news.google.com/rss/search?q=China+economia+cobre+estimulo+when:7d&hl=es-419&gl=CL&ceid=CL:es-419',
-    fuente_nombre: 'Reuters RSS',
-    idioma: 'es'
-  }
 ]
 
 export interface NoticiaRaw {

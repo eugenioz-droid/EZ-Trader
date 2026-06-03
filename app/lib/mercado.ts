@@ -109,6 +109,7 @@ export async function obtenerPrecios(): Promise<PrecioDato[]> {
     obtenerStooq('hg.f', 'COBRE', 0.01),  // Stooq da cobre en ¢/lb → ×0.01 = USD/lb
     obtenerStooq('dx.f', 'DXY'),          // futuro del índice dólar (≈ DXY)
     obtenerStooq('cl.f', 'PETROLEO'),     // WTI crudo (Tier 2)
+    obtenerStooq('vi.f', 'VIX'),          // futuro VIX (risk-on/off, Tier 2)
     obtenerFed(),
     obtenerTPM(),
   ])

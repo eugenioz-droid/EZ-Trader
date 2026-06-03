@@ -248,7 +248,14 @@ BASE DE DATOS (Supabase PostgreSQL)
 | 10.1  | Acceso a conversaciones anteriores (selector de chat en PanelAgente) | ☑        | YO     |
 | 10.2  | Pines de noticias con color por impacto en el gráfico (rojo=alto, ámbar=medio, desde Haiku) | ☑ | YO |
 | 10.3  | Segundo tab de instrumento (estructura básica) — DIFERIDO: requiere definir instrumento + su modelo de factores y prompt propio (idea: BTC-CLP) | ⏸️ | YO |
-| 10.4  | **Ampliar/auditar fuentes de noticias**: revisar qué medios relevantes quedan fuera y sumar RSS directos rápidos (Reuters/Bloomberg markets, económico chileno). Hoy: 1 fuente directa (investingLive) + 5 búsquedas Google News | ☐ | TÚ+YO |
+| 10.4  | **Calidad de señal (auditado 2026-06-03)** — subtareas abajo. Google News es baseline pero con latencia/ruido; falta calendario, fuentes primarias y factores clave | 🔨 | TÚ+YO |
+| 10.4.1 | Podar Google News (de 5→2 locales) + agregar **Financial Juice** (squawk RT) y **Fed RSS** (primaria) ✓ verificadas | ☑ | YO |
+| 10.4.2 | **Activar VIX** (Stooq `vi.f`, migración 0008) — risk-on/off Tier 2, en contexto del agente | ☑ | YO |
+| 10.4.3 | **BCCh**: comunicados RPM (fuente primaria CLP) + calendario de reuniones 2026 (8 fechas) | ☐ | YO |
+| 10.4.4 | **🗓️ Calendario económico** (Finnhub/ForexFactory JSON): catalizadores agendados (NFP/CPI/FOMC/IPC Chile/TPM) → agente anticipatorio | ☐ | TÚ+YO |
+| 10.4.5 | Expectativas de tasas (CME FedWatch / futuros Fed) — dirección del diferencial | ☐ | YO |
+| 10.4.6 | **Síntesis de sesión** del agente (1×/día, Sonnet): lectura coherente de factores+noticias del día | ☐ | YO |
+| 10.4.7 | UI: etiquetar precios como "referencia · puede diferir del bróker" (honestidad vs gap MetaTrader) ✓ | ☑ | YO |
 | 10.5  | Botón Refresh on-demand de noticias (ya existía; + clasificación Haiku en el refresh) | ☑ | YO |
 | 10.6  | TPM real → **RESUELTO con mindicador.cl** (no se necesitó el BCCh)   | ☑        | YO     |
 | 10.7  | **[Robustez A] Indicador de frescura por factor** ✓: punto verde/ámbar + "hace X" por factor; frescura relativa al latido USD/CLP (⚠️ si una fuente se congela mientras las demás siguen); "mercado cerrado" si el latido está viejo. Caza fallos silenciosos como el de Yahoo/cobre | ☑ | YO |

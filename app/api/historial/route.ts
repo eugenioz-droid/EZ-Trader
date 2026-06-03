@@ -62,7 +62,9 @@ export async function GET(req: NextRequest) {
 
   const pines = (noticias ?? [])
     .map((n) => {
-      const impacto = (n.analisis_ia as unknown as { impacto: string }[] | null)?.[0]?.impacto
+      // analisis_ia es OBJETO (1-a-1 tras UNIQUE 0006), no array. Soportamos ambos.
+      const raw = n.analisis_ia as unknown as { impacto: string } | { impacto: string }[] | null
+      const impacto = (Array.isArray(raw) ? raw[0] : raw)?.impacto
       return { titulo: n.titulo, publicado_at: n.publicado_at, impacto }
     })
     .filter((x) => x.publicado_at && (x.impacto === 'alto' || x.impacto === 'medio'))

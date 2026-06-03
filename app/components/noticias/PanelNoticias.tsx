@@ -49,13 +49,15 @@ async function getNoticias(fuente?: string, impacto?: string): Promise<Noticia[]
 
   const { data } = await query
 
-  // Aplanar el analisis_ia (Supabase devuelve array aunque sea 1-N)
+  // Aplanar el analisis_ia. OJO: tras el UNIQUE(noticia_id) (migración 0006) la relación
+  // es 1-a-1 y PostgREST devuelve un OBJETO, no un array. Soportamos ambos por robustez.
+  type AnalisisRaw = {
+    impacto: string; direccion_estimada: string; resumen_ia: string;
+    confianza: number | null; factor_id: number | null; factores: { codigo: string } | null
+  }
   const noticias: Noticia[] = (data ?? []).map((n) => {
-    const arr = n.analisis_ia as unknown as Array<{
-      impacto: string; direccion_estimada: string; resumen_ia: string;
-      confianza: number | null; factor_id: number | null; factores: { codigo: string } | null
-    }>
-    const a = arr?.[0] ?? null
+    const raw = n.analisis_ia as unknown as AnalisisRaw | AnalisisRaw[] | null
+    const a = (Array.isArray(raw) ? raw[0] : raw) ?? null
     return {
       id: n.id,
       titulo: n.titulo,

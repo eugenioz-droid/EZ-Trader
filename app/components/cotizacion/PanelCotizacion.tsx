@@ -64,6 +64,11 @@ export default async function PanelCotizacion() {
           </div>
         </div>
       )}
+      {actual && (
+        <p className="text-[10px] text-muted/50 mt-2" title="Precio de referencia de mercado, con leve retraso. Tu bróker puede mostrar un valor distinto por spread/feed.">
+          Precio de referencia · puede diferir de tu bróker
+        </p>
+      )}
     </div>
   )
 }
