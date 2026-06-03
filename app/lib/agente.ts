@@ -114,6 +114,7 @@ export async function consultarAgente(params: {
   pregunta: string
   profundidad: 'normal' | 'profunda'
   conversacion_id?: number | null
+  historial?: Array<{ rol: string; texto: string }>
 }): Promise<RespuestaAgente> {
   const esProfunda = params.profundidad === 'profunda'
   const modelo = esProfunda ? MODELOS.profundo : MODELOS.agente
@@ -121,7 +122,15 @@ export async function consultarAgente(params: {
 
   const contexto = await construirContexto()
 
-  // El system prompt (estable) se cachea; el contexto + pregunta van en el mensaje.
+  // Últimos 6 mensajes del historial (3 intercambios) para contexto multi-turn.
+  // El contexto de mercado va solo en el último mensaje del usuario.
+  const historialReciente = (params.historial ?? []).slice(-6)
+  const mensajesHistorial: Anthropic.MessageParam[] = historialReciente.map((m) => ({
+    role: m.rol as 'user' | 'assistant',
+    content: m.texto,
+  }))
+
+  // El system prompt (estable) se cachea; el contexto + pregunta van en el último mensaje.
   const req: Anthropic.MessageCreateParams = {
     model: modelo,
     max_tokens: esProfunda ? 4000 : 2000,
@@ -133,6 +142,7 @@ export async function consultarAgente(params: {
       },
     ],
     messages: [
+      ...mensajesHistorial,
       {
         role: 'user',
         content: `${contexto}\n\n## Consulta del usuario\n${params.pregunta}`,

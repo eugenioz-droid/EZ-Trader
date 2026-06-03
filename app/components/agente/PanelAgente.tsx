@@ -23,21 +23,49 @@ const AGENTES: Record<Modo, { etiqueta: string; modelo: string; nota: string }> 
   },
 }
 
+const BIENVENIDA: Mensaje = {
+  rol: 'assistant',
+  texto: 'Hola. Soy tu agente de análisis USD/CLP. Pregúntame por el estado de los factores, una noticia, o si conviene una entrada esta semana.',
+}
+
 export default function PanelAgente() {
   const [abierto, setAbierto] = useState(true)
   const [modo, setModo] = useState<Modo>('normal')
   const [menuAbierto, setMenuAbierto] = useState(false)
-  const [mensajes, setMensajes] = useState<Mensaje[]>([
-    {
-      rol: 'assistant',
-      texto:
-        'Hola. Soy tu agente de análisis USD/CLP. Pregúntame por el estado de los factores, una noticia, o si conviene una entrada esta semana.',
-    },
-  ])
+  const [mensajes, setMensajes] = useState<Mensaje[]>([])
+  const [cargandoHistorial, setCargandoHistorial] = useState(true)
+  const [conversacionId, setConversacionId] = useState<number | null>(null)
   const [input, setInput] = useState('')
   const [cargando, setCargando] = useState(false)
   const finRef = useRef<HTMLDivElement>(null)
   const menuRef = useRef<HTMLDivElement>(null)
+
+  // Carga la conversación activa al montar
+  useEffect(() => {
+    async function cargarConversacion() {
+      try {
+        const r = await fetch('/api/conversacion')
+        const d = await r.json()
+        setConversacionId(d.conversacion_id)
+        if (d.mensajes?.length > 0) {
+          setMensajes(
+            d.mensajes.map((m: { rol: string; contenido: string; modelo_usado?: string }) => ({
+              rol: m.rol as 'user' | 'assistant',
+              texto: m.contenido,
+              modelo: m.modelo_usado ?? undefined,
+            })),
+          )
+        } else {
+          setMensajes([BIENVENIDA])
+        }
+      } catch {
+        setMensajes([BIENVENIDA])
+      } finally {
+        setCargandoHistorial(false)
+      }
+    }
+    cargarConversacion()
+  }, [])
 
   useEffect(() => {
     finRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -66,7 +94,7 @@ export default function PanelAgente() {
       const res = await fetch('/api/consulta-agente', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pregunta, profundidad: modo }),
+        body: JSON.stringify({ pregunta, profundidad: modo, conversacion_id: conversacionId }),
       })
       const data = await res.json()
       if (!res.ok) {
@@ -75,6 +103,7 @@ export default function PanelAgente() {
           { rol: 'assistant', texto: `⚠️ ${data.error ?? 'Error al consultar el agente.'}` },
         ])
       } else {
+        if (data.conversacion_id) setConversacionId(data.conversacion_id)
         setMensajes((m) => [
           ...m,
           { rol: 'assistant', texto: data.respuesta, modelo: data.modelo },
@@ -127,6 +156,13 @@ export default function PanelAgente() {
           {/* Mensajes — ocupa todo el espacio disponible sobre los controles */}
           <div className="flex-1 overflow-y-auto min-h-0 px-4 pt-4 pb-2">
             <div className="bg-panel rounded-lg p-4 border border-line space-y-3 h-full">
+              {cargandoHistorial && (
+                <div className="flex justify-start">
+                  <div className="bg-elevated rounded-lg px-3 py-2 text-sm text-muted animate-pulse">
+                    Cargando conversación…
+                  </div>
+                </div>
+              )}
               {mensajes.map((m, i) => (
                 <div
                   key={i}

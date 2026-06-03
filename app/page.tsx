@@ -74,8 +74,8 @@ export default async function Home({
         {/* Zona izquierda 8 cols: gráfico arriba + noticias/factores abajo */}
         <div className="col-span-8 flex flex-col border-r border-line overflow-hidden">
 
-          {/* Gráfico — 60% de la altura */}
-          <div className="flex-[3] overflow-y-auto border-b border-line min-h-0">
+          {/* Gráfico — 45% de la altura */}
+          <div className="flex-[9] overflow-y-auto border-b border-line min-h-0">
             <Suspense fallback={<CargandoPanel texto="Cargando mercado..." />}>
               <PanelCotizacion />
             </Suspense>
@@ -84,8 +84,8 @@ export default async function Home({
             </Suspense>
           </div>
 
-          {/* Noticias + Factores lado a lado — 40% de la altura */}
-          <div className="flex-[2] grid grid-cols-2 overflow-hidden min-h-0">
+          {/* Noticias + Factores lado a lado — 55% de la altura */}
+          <div className="flex-[11] grid grid-cols-2 overflow-hidden min-h-0">
             <div className="border-r border-line overflow-y-auto">
               <Suspense fallback={<CargandoPanel texto="Cargando noticias..." />}>
                 <PanelNoticias fuente={fuente} impacto={impacto} />
