@@ -1,9 +1,6 @@
 import { supabaseAdmin } from '@/app/lib/supabase'
 import ChartHistorial from './ChartHistorial'
 
-// Palabras clave para marcar noticias relevantes (interino, hasta Haiku/Fase 8).
-const KEYWORDS = /\b(fed|fomc|iran|israel|trump|tariff|arancel|petr[oó]leo|guerra|war|cobre|copper|intervenci|sanction|sanci[oó]n)\b/i
-
 const PERIODO_INICIAL = '1sem'
 const DIAS_INICIAL = 7
 
@@ -34,14 +31,22 @@ async function getInicial() {
 
   const { data: noticias } = await supabaseAdmin
     .from('noticias')
-    .select('titulo, publicado_at')
+    .select('titulo, publicado_at, analisis_ia ( impacto )')
     .gte('publicado_at', desde)
     .order('publicado_at', { ascending: true })
     .limit(500)
 
   const pines = (noticias ?? [])
-    .filter((n) => n.publicado_at && KEYWORDS.test(n.titulo))
-    .map((n) => ({ t: new Date(n.publicado_at!).getTime(), titulo: n.titulo }))
+    .map((n) => {
+      const impacto = (n.analisis_ia as unknown as { impacto: string }[] | null)?.[0]?.impacto
+      return { titulo: n.titulo, publicado_at: n.publicado_at, impacto }
+    })
+    .filter((x) => x.publicado_at && (x.impacto === 'alto' || x.impacto === 'medio'))
+    .map((x) => ({
+      t: new Date(x.publicado_at!).getTime(),
+      titulo: x.titulo,
+      impacto: x.impacto as 'alto' | 'medio',
+    }))
 
   return { periodo: PERIODO_INICIAL, series: seriesData, pines }
 }

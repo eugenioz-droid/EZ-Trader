@@ -3,7 +3,7 @@
 import { useState, useRef } from 'react'
 
 interface Punto { t: number; v: number }
-interface Pin { t: number; titulo: string }
+interface Pin { t: number; titulo: string; impacto: 'alto' | 'medio' }
 export interface SerieGrafico {
   codigo: string
   label: string
@@ -145,14 +145,17 @@ export default function GraficoInteractivo({
             ))}
           </svg>
 
-          {/* Pines de noticias */}
+          {/* Pines de noticias — color por impacto (rojo=alto, ámbar=medio) */}
           {pines.map((p, i) => {
             const xp = ((p.t - t0) / span) * 100
             if (xp < 0 || xp > 100) return null
+            const alto = p.impacto === 'alto'
+            const colLinea = alto ? 'bg-pesoDebil/50' : 'bg-amber-400/40'
+            const colMarca = alto ? 'text-pesoDebil' : 'text-amber-400'
             return (
-              <div key={i} className="absolute top-0 h-full" style={{ left: `${xp}%` }} title={p.titulo}>
-                <div className="w-px h-full bg-amber-400/40" />
-                <div className="absolute bottom-0 -translate-x-1/2 text-[10px] text-amber-400">▲</div>
+              <div key={i} className="absolute top-0 h-full" style={{ left: `${xp}%` }} title={`${alto ? '🔴 ALTO' : '🟠 MEDIO'} · ${p.titulo}`}>
+                <div className={`w-px h-full ${colLinea}`} />
+                <div className={`absolute bottom-0 -translate-x-1/2 text-[10px] ${colMarca}`}>▲</div>
               </div>
             )
           })}

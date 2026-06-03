@@ -11,9 +11,6 @@ const PERIODOS: Record<string, number> = {
   '3mes': 90,
 }
 
-// Palabras clave para marcar noticias relevantes (interino, hasta Haiku/Fase 8).
-const KEYWORDS = /\b(fed|fomc|iran|israel|trump|tariff|arancel|petr[oó]leo|guerra|war|cobre|copper|intervenci|sanction|sanci[oó]n)\b/i
-
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url)
   const periodo = searchParams.get('periodo') ?? '1sem'
@@ -55,17 +52,25 @@ export async function GET(req: NextRequest) {
     })
   )
 
-  // Noticias relevantes en la ventana (keyword match)
+  // Pines = noticias clasificadas por Haiku con impacto alto/medio en la ventana.
   const { data: noticias } = await supabaseAdmin
     .from('noticias')
-    .select('titulo, publicado_at')
+    .select('titulo, publicado_at, analisis_ia ( impacto )')
     .gte('publicado_at', desde)
     .order('publicado_at', { ascending: true })
     .limit(500)
 
   const pines = (noticias ?? [])
-    .filter((n) => n.publicado_at && KEYWORDS.test(n.titulo))
-    .map((n) => ({ t: new Date(n.publicado_at!).getTime(), titulo: n.titulo }))
+    .map((n) => {
+      const impacto = (n.analisis_ia as unknown as { impacto: string }[] | null)?.[0]?.impacto
+      return { titulo: n.titulo, publicado_at: n.publicado_at, impacto }
+    })
+    .filter((x) => x.publicado_at && (x.impacto === 'alto' || x.impacto === 'medio'))
+    .map((x) => ({
+      t: new Date(x.publicado_at!).getTime(),
+      titulo: x.titulo,
+      impacto: x.impacto as 'alto' | 'medio',
+    }))
 
   return NextResponse.json({ periodo, series: resultado, pines })
 }

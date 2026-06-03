@@ -62,19 +62,15 @@ async function obtenerStooq(
   const lineas = csv.trim().split('\n')
   if (lineas.length < 2) return null
   const cols = lineas[1].split(',')
-  const fecha = cols[1] // YYYY-MM-DD
-  const hora = cols[2] // HH:MM:SS
   const close = parseFloat(cols[6])
   if (!isFinite(close) || cols[6] === 'N/D') return null
-  // Fecha del dato según Stooq (UTC); si viene N/D usamos ahora.
-  const fechaDato =
-    fecha && fecha !== 'N/D'
-      ? new Date(`${fecha}T${hora && hora !== 'N/D' ? hora : '00:00:00'}Z`).toISOString()
-      : new Date().toISOString()
+  // Estampamos con la hora de captura real (UTC), NO la que reporta Stooq:
+  // Stooq da la hora en Varsovia (CEST/UTC+2), tratarla como UTC dejaba los puntos
+  // ~2h en el futuro y descuadraba el gráfico. Igual que USDCLP/Yahoo: new Date().
   return {
     codigo_serie,
     valor: close * factor,
-    fecha_dato: fechaDato,
+    fecha_dato: new Date().toISOString(),
   }
 }
 

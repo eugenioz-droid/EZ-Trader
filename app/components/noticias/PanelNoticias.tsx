@@ -148,19 +148,26 @@ export default async function PanelNoticias({
           const a = n.analisis
           const factorLabel = a?.factor_codigo ? FACTOR_LABEL[a.factor_codigo] : null
 
+          // Borde de color por impacto (capta la atención de un vistazo).
+          // Sin clasificar aún: verde si es reciente, sino transparente.
+          const borde =
+            a?.impacto === 'alto'
+              ? 'border-pesoDebil'
+              : a?.impacto === 'medio'
+              ? 'border-amber-400'
+              : a?.impacto === 'bajo'
+              ? 'border-emerald-600/60'
+              : reciente
+              ? 'border-brand'
+              : 'border-transparent'
+
           return (
             <a
               key={n.id}
               href={n.url ?? '#'}
               target="_blank"
               rel="noopener noreferrer"
-              className={`block px-4 py-3 hover:bg-elevated transition-colors group ${
-                a?.impacto === 'alto'
-                  ? 'border-l-2 border-pesoDebil'
-                  : reciente
-                  ? 'border-l-2 border-brand'
-                  : 'border-l-2 border-transparent'
-              }`}
+              className={`block px-4 py-3 hover:bg-elevated transition-colors group border-l-2 ${borde}`}
             >
               {/* Título */}
               <p className="text-sm text-silver group-hover:text-snow leading-snug line-clamp-2">

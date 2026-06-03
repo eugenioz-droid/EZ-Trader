@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react'
 import GraficoInteractivo, { type SerieGrafico } from './GraficoInteractivo'
 
 interface Punto { t: number; v: number }
-interface Pin { t: number; titulo: string }
+interface Pin { t: number; titulo: string; impacto: 'alto' | 'medio' }
 
 const SERIES_META: Record<string, { label: string; color: string; fija?: boolean }> = {
   USDCLP: { label: 'USD/CLP', color: '#00FF7F', fija: true },
@@ -75,7 +75,9 @@ export default function ChartHistorial({ inicial }: { inicial: RespuestaHistoria
   const pines: Pin[] = []
   let ultimo = -Infinity
   for (const p of data.pines) {
-    if (p.t >= t0 && p.t <= t1 && p.t - ultimo >= espaciado) {
+    if (p.t < t0 || p.t > t1) continue
+    // Los de impacto ALTO siempre se muestran; los MEDIO se espacian para no saturar.
+    if (p.impacto === 'alto' || p.t - ultimo >= espaciado) {
       pines.push(p)
       ultimo = p.t
     }
