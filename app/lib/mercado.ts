@@ -9,11 +9,25 @@ interface PrecioDato {
   fecha_dato: string
 }
 
+// fetch con timeout duro. CRÍTICO en Workers: sin esto, una fuente lenta (Stooq se
+// cuelga ~15s a veces) hacía que el cron tardara ~48s, lo que (a) perdía precios y
+// (b) pg_cron cortaba la llamada antes de llegar a la clasificación de Haiku al final
+// → noticias sin clasificar. Con timeout, una fuente lenta falla rápido y el cron sigue.
+async function fetchTimeout(url: string, ms = 6000, init?: RequestInit): Promise<Response> {
+  const ctrl = new AbortController()
+  const t = setTimeout(() => ctrl.abort(), ms)
+  try {
+    return await fetch(url, { ...init, signal: ctrl.signal })
+  } finally {
+    clearTimeout(t)
+  }
+}
+
 // Helper genérico para una serie de FRED (última observación válida).
 async function obtenerFred(serieFred: string, codigoSerie: string): Promise<PrecioDato | null> {
   if (!FRED_API_KEY) return null
   const url = `https://api.stlouisfed.org/fred/series/observations?series_id=${serieFred}&api_key=${FRED_API_KEY}&file_type=json&sort_order=desc&limit=1`
-  const res = await fetch(url)
+  const res = await fetchTimeout(url)
   if (!res.ok) throw new Error(`FRED ${serieFred}: ${res.status}`)
   const data = await res.json()
   const obs = data?.observations?.[0]
@@ -32,7 +46,7 @@ const obtenerFed = () => obtenerFred('DFF', 'FED')
 // Reemplaza el viejo proxy de FRED (IRSTCI01CLM156N: mensual, ~3m atraso). El BCCh
 // nunca respondió las credenciales; mindicador resuelve la TPM real sin credenciales.
 async function obtenerTPM(): Promise<PrecioDato | null> {
-  const res = await fetch('https://mindicador.cl/api/tpm')
+  const res = await fetchTimeout('https://mindicador.cl/api/tpm')
   if (!res.ok) throw new Error(`mindicador TPM: HTTP ${res.status}`)
   const data = await res.json()
   const ultimo = data?.serie?.[0]
@@ -47,7 +61,7 @@ async function obtenerTPM(): Promise<PrecioDato | null> {
 // USD/CLP via Twelve Data
 async function obtenerUSDCLP(): Promise<PrecioDato | null> {
   const url = `https://api.twelvedata.com/price?symbol=USD/CLP&apikey=${TWELVE_DATA_KEY}`
-  const res = await fetch(url)
+  const res = await fetchTimeout(url)
   if (!res.ok) throw new Error(`Twelve Data error: ${res.status}`)
   const data = await res.json()
   if (!data.price) return null
@@ -68,7 +82,9 @@ async function obtenerStooq(
   factor = 1,
 ): Promise<PrecioDato | null> {
   const url = `https://stooq.com/q/l/?s=${simbolo}&f=sd2t2ohlcv&h&e=csv`
-  const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0 (EZ-Trader/1.0)' } })
+  // Timeout 6s: Stooq se cuelga intermitentemente desde Workers; mejor perder ese punto
+  // (la frescura lo marcará) que colgar el cron entero y bloquear la clasificación.
+  const res = await fetchTimeout(url, 6000, { headers: { 'User-Agent': 'Mozilla/5.0 (EZ-Trader/1.0)' } })
   if (!res.ok) throw new Error(`Stooq ${simbolo}: HTTP ${res.status}`)
   const csv = await res.text()
   // Formato: Symbol,Date,Time,Open,High,Low,Close,Volume

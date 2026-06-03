@@ -26,7 +26,17 @@ export async function GET(req: NextRequest) {
     resultados.noticias = { error: String(err) }
   }
 
-  // 2. Obtener y guardar precios de mercado
+  // 2. Clasificar noticias nuevas con Haiku — ANTES que los precios lentos.
+  // Solo depende de las noticias (paso 1), no de los precios. Si lo dejábamos al final,
+  // una fuente de precios lenta (Stooq) podía cortar el cron antes de clasificar.
+  try {
+    const clasificadas = await clasificarNoticiasNuevas()
+    resultados.clasificacion = { clasificadas }
+  } catch (err) {
+    resultados.clasificacion = { error: String(err) }
+  }
+
+  // 3. Obtener y guardar precios de mercado (cada fetch con timeout)
   try {
     const precios = await obtenerPrecios()
     const guardados = await guardarPrecios(precios)
@@ -35,20 +45,12 @@ export async function GET(req: NextRequest) {
     resultados.precios = { error: String(err) }
   }
 
-  // 3. Evaluar reglas de alerta (después de tener los precios frescos)
+  // 4. Evaluar reglas de alerta (después de tener los precios frescos)
   try {
     const alertasNuevas = await evaluarAlertas()
     resultados.alertas = { nuevas: alertasNuevas }
   } catch (err) {
     resultados.alertas = { error: String(err) }
-  }
-
-  // 4. Clasificar noticias nuevas con Haiku (solo las que no tienen análisis aún)
-  try {
-    const clasificadas = await clasificarNoticiasNuevas()
-    resultados.clasificacion = { clasificadas }
-  } catch (err) {
-    resultados.clasificacion = { error: String(err) }
   }
 
   resultados.duracion_ms = Date.now() - inicio
