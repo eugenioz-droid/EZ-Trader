@@ -187,7 +187,7 @@ BASE DE DATOS (Supabase PostgreSQL)
 | 7.4  | Conectar chat del frontend con el agente                 | ☑        | YO     |
 | 7.16 | Botón "Análisis profundo" en el chat (dispara Opus)      | ☑        | YO     |
 | 7.5  | Guardar historial de conversaciones en BD + multi-turn (Claude recibe últimos 3 intercambios) | ☑ | YO |
-| 7.6  | Testing del agente (calidad de respuestas)               | ☐        | TÚ     |
+| 7.6  | Testing del agente (calidad de respuestas) — validado en prod 2026-06-03, respuestas sensatas | ☑ | TÚ |
 | 7.7  | Sistema de trazabilidad de estrategias → **MOVIDO a Fase 11** (consolidado)| ➡️ | TÚ+YO  |
 | 7.8  | Alertas interpretadas por el agente (capa sobre reglas)  | ☑        | YO     |
 | 7.9  | [Fase 2] Reporting rápido (resumen de fin de semana)     | ☐        | YO     |
@@ -245,12 +245,13 @@ BASE DE DATOS (Supabase PostgreSQL)
 
 | N°    | Descripción                                                          | Realizado | Quién  |
 |-------|----------------------------------------------------------------------|-----------|--------|
-| 10.1  | Acceso a conversaciones anteriores (selector de chat en PanelAgente) | ☐        | YO     |
-| 10.2  | Pines de noticias con color por impacto superpuestos en el gráfico   | ☐        | YO     |
-| 10.3  | Segundo tab de instrumento (estructura básica)                        | ☐        | YO     |
+| 10.1  | Acceso a conversaciones anteriores (selector de chat en PanelAgente) | ☑        | YO     |
+| 10.2  | Pines de noticias con color por impacto en el gráfico (rojo=alto, ámbar=medio, desde Haiku) | ☑ | YO |
+| 10.3  | Segundo tab de instrumento (estructura básica) — DIFERIDO: requiere definir instrumento + su modelo de factores y prompt propio (idea: BTC-CLP) | ⏸️ | YO |
 | 10.4  | **Ampliar/auditar fuentes de noticias**: revisar qué medios relevantes quedan fuera y sumar RSS directos rápidos (Reuters/Bloomberg markets, económico chileno). Hoy: 1 fuente directa (investingLive) + 5 búsquedas Google News | ☐ | TÚ+YO |
-| 10.5  | [Post-MVP] Botón Refresh on-demand de noticias                       | ☐        | YO     |
-| 10.6  | TPM real para TPM → **RESUELTO con mindicador.cl** (no se necesitó el BCCh) | ☑    | YO     |
+| 10.5  | Botón Refresh on-demand de noticias (ya existía; + clasificación Haiku en el refresh) | ☑ | YO |
+| 10.6  | TPM real → **RESUELTO con mindicador.cl** (no se necesitó el BCCh)   | ☑        | YO     |
+| 10.7  | **[Robustez] Indicador de frescura por factor** ✓: punto verde/ámbar + "hace X" por factor; frescura relativa al latido USD/CLP (⚠️ si una fuente se congela mientras las demás siguen); "mercado cerrado" si el latido está viejo. Caza fallos silenciosos como el de Yahoo/cobre | ☑ | YO |
 
 ---
 

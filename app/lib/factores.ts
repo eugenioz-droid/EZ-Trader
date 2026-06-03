@@ -9,6 +9,9 @@ const FACTORES_CONFIG: Record<string, { sube_peso: 'fuerte' | 'debil' }> = {
   FED: { sube_peso: 'debil' }, // Fed sube tasa → dólar atractivo → peso débil
 }
 
+// Estado de frescura de un factor (robustez: caza fuentes congeladas).
+export type Frescura = 'fresca' | 'rezagada' | 'sin_dato'
+
 export interface FactorDato {
   codigo: string
   nombre: string
@@ -19,11 +22,18 @@ export interface FactorDato {
   var1sem: number | null // % cambio vs ~7d atrás
   sparkline: number[] // puntos para mini-gráfico (cronológico)
   senal: 'fuerte' | 'debil' | null // contribución actual al peso
+  frescura?: Frescura // estado de actualización (relativo al latido USD/CLP)
+  fecha_dato_ms?: number | null // epoch de la última actualización (para "hace X")
   esDiferencial?: boolean // fila especial: diferencial de tasas (valor en pp)
   componentes?: { tpm: number | null; fed: number | null } // para la fila de diferencial
 }
 
 const DIA_MS = 24 * 3600 * 1000
+
+// Umbrales de frescura
+const REZAGO_INTRADIA_MS = 30 * 60 * 1000 // factor intradía rezagado vs latido
+const HEARTBEAT_QUIETO_MS = 30 * 60 * 1000 // si el latido mismo está viejo → mercado quieto/cerrado
+const REZAGO_DIARIO_MS = 3 * DIA_MS // series diarias (TPM/FED): rezagada si >3 días sin dato
 
 // Valor más reciente en o antes de un instante dado (para comparar ventanas).
 async function valorEnOAntes(serieId: number, instante: number): Promise<number | null> {
@@ -152,6 +162,12 @@ export async function getDiferencialTasas(): Promise<FactorDato> {
   const fedAhora = fedPts.length ? fedPts[fedPts.length - 1].v : null
   const diff = tpmAhora !== null && fedAhora !== null ? tpmAhora - fedAhora : null
 
+  // Fecha del diferencial = la más reciente de sus componentes (serie diaria).
+  const ultMs = Math.max(
+    tpmPts.length ? tpmPts[tpmPts.length - 1].t : 0,
+    fedPts.length ? fedPts[fedPts.length - 1].t : 0,
+  )
+
   // Tendencia: diferencial ahora vs ~30 días atrás
   const tpm30 = ultimoEnOAntes(tpmPts, ahora - 30 * DIA_MS)
   const fed30 = ultimoEnOAntes(fedPts, ahora - 30 * DIA_MS)
@@ -181,7 +197,7 @@ export async function getDiferencialTasas(): Promise<FactorDato> {
     nombre: 'Diferencial tasas',
     unidad: 'pp',
     valor: diff,
-    fecha_dato: null,
+    fecha_dato: ultMs > 0 ? new Date(ultMs).toISOString() : null,
     var1d: null,
     var1sem: null,
     sparkline: sparkDown,
@@ -191,14 +207,60 @@ export async function getDiferencialTasas(): Promise<FactorDato> {
   }
 }
 
-// Panel completo de factores Tier 1: Cobre, DXY, Diferencial de tasas.
-export async function getFactoresPanel(): Promise<FactorDato[]> {
-  const [mercado, diferencial] = await Promise.all([
+// Latido del sistema: última actualización de USD/CLP (Twelve Data, la fuente más
+// confiable y de mayor cadencia). Sirve de referencia para detectar fuentes congeladas.
+async function getHeartbeat(): Promise<number | null> {
+  const { data: s } = await supabaseAdmin.from('series').select('id').eq('codigo', 'USDCLP').single()
+  if (!s) return null
+  const { data } = await supabaseAdmin
+    .from('datos_mercado')
+    .select('fecha_dato')
+    .eq('serie_id', s.id)
+    .order('fecha_dato', { ascending: false })
+    .limit(1)
+    .single()
+  return data?.fecha_dato ? new Date(data.fecha_dato).getTime() : null
+}
+
+// Frescura RELATIVA: un factor está "rezagado" solo si se quedó atrás mientras el
+// latido sigue vivo (fuente congelada). Si el latido mismo está viejo, el mercado
+// está cerrado/quieto y no marcamos nada como roto.
+function calcularFrescura(f: FactorDato, heartbeatMs: number | null, mercadoActivo: boolean): Frescura {
+  if (f.fecha_dato === null) return f.valor !== null ? 'fresca' : 'sin_dato'
+  const fMs = new Date(f.fecha_dato).getTime()
+
+  if (f.esDiferencial) {
+    // Serie diaria (TPM/FED): rezagada solo si lleva varios días sin dato.
+    return Date.now() - fMs > REZAGO_DIARIO_MS ? 'rezagada' : 'fresca'
+  }
+
+  // Intradía: solo evaluamos rezago si el mercado está activo (latido reciente).
+  if (!mercadoActivo || heartbeatMs === null) return 'fresca'
+  return heartbeatMs - fMs > REZAGO_INTRADIA_MS ? 'rezagada' : 'fresca'
+}
+
+export interface FactoresPanel {
+  factores: FactorDato[]
+  mercadoActivo: boolean // false = latido viejo → mercado cerrado/quieto (no alarmar)
+}
+
+// Panel completo de factores Tier 1: Cobre, DXY, Diferencial de tasas + frescura.
+export async function getFactoresPanel(): Promise<FactoresPanel> {
+  const [mercado, diferencial, heartbeatMs] = await Promise.all([
     getFactoresDetalle(['COBRE', 'DXY']),
     getDiferencialTasas(),
+    getHeartbeat(),
   ])
-  // Orden: Cobre, DXY (como vengan), luego diferencial.
-  return [...mercado, diferencial]
+  const factores = [...mercado, diferencial]
+
+  const mercadoActivo = heartbeatMs !== null && Date.now() - heartbeatMs <= HEARTBEAT_QUIETO_MS
+
+  for (const f of factores) {
+    f.frescura = calcularFrescura(f, heartbeatMs, mercadoActivo)
+    f.fecha_dato_ms = f.fecha_dato ? new Date(f.fecha_dato).getTime() : null
+  }
+
+  return { factores, mercadoActivo }
 }
 
 // Sesgo agregado de los factores Tier 1 (para el badge de alineación).

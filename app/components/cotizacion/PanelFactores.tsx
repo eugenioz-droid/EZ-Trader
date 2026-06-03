@@ -1,5 +1,39 @@
 import { getFactoresPanel, calcularSesgoAlineacion, type FactorDato } from '@/app/lib/factores'
 
+function tiempoRelativo(ms: number | null | undefined): string {
+  if (!ms) return ''
+  const min = Math.floor((Date.now() - ms) / 60000)
+  if (min < 1) return 'recién'
+  if (min < 60) return `hace ${min}m`
+  const hrs = Math.floor(min / 60)
+  if (hrs < 24) return `hace ${hrs}h`
+  return `hace ${Math.floor(hrs / 24)}d`
+}
+
+// Indicador de frescura: punto verde si OK, ámbar + "rezagado" si una fuente se congeló.
+function FrescuraDot({ f }: { f: FactorDato }) {
+  if (f.frescura === 'rezagada') {
+    return (
+      <span
+        className="inline-flex items-center gap-1 text-[10px] text-amber-400"
+        title={`Fuente desactualizada (${tiempoRelativo(f.fecha_dato_ms)}). Las demás siguen actualizándose.`}
+      >
+        <span className="h-1.5 w-1.5 rounded-full bg-amber-400 animate-pulse" />
+        ⚠ {tiempoRelativo(f.fecha_dato_ms)}
+      </span>
+    )
+  }
+  if (f.frescura === 'sin_dato') {
+    return <span className="h-1.5 w-1.5 rounded-full bg-muted/40 inline-block" title="Sin datos" />
+  }
+  return (
+    <span
+      className="h-1.5 w-1.5 rounded-full bg-pesoFuerte/60 inline-block"
+      title={`Actualizado ${tiempoRelativo(f.fecha_dato_ms)}`}
+    />
+  )
+}
+
 // Mini-gráfico SVG estático (server-rendered). Color según la señal de peso.
 function Sparkline({ puntos, color }: { puntos: number[]; color: string }) {
   if (puntos.length < 2) {
@@ -61,9 +95,10 @@ function SenalPill({ senal }: { senal: FactorDato['senal'] }) {
 }
 
 export default async function PanelFactores() {
-  const factores = await getFactoresPanel()
+  const { factores, mercadoActivo } = await getFactoresPanel()
   // Badge de alineación: los 3 Tier 1 (cobre, DXY, diferencial de tasas).
   const sesgo = calcularSesgoAlineacion(factores)
+  const hayRezago = factores.some((f) => f.frescura === 'rezagada')
 
   return (
     <div className="px-4 py-4">
@@ -71,8 +106,20 @@ export default async function PanelFactores() {
         <h2 className="text-xs font-semibold text-muted uppercase tracking-wider">
           Factores de mercado
         </h2>
-        <span className="text-[10px] text-muted/60">vs. ayer / vs. semana</span>
+        {mercadoActivo ? (
+          <span className="text-[10px] text-muted/60">vs. ayer / vs. semana</span>
+        ) : (
+          <span className="text-[10px] text-muted/60" title="El USD/CLP no se está actualizando: mercado cerrado o cron detenido.">
+            ● mercado cerrado
+          </span>
+        )}
       </div>
+
+      {hayRezago && mercadoActivo && (
+        <div className="bg-amber-400/10 border border-amber-400/30 rounded-lg px-3 py-1.5 mb-3 text-[11px] text-amber-300">
+          ⚠ Una fuente de datos está rezagada mientras las demás siguen. Revisa el factor marcado.
+        </div>
+      )}
 
       {sesgo && (
         <div className={`${sesgo.bg} rounded-lg px-3 py-2 mb-4`}>
@@ -98,7 +145,10 @@ export default async function PanelFactores() {
             >
               {/* Col 1: nombre + señal */}
               <div className="min-w-0">
-                <div className="text-sm text-silver truncate">{f.nombre}</div>
+                <div className="flex items-center gap-1.5">
+                  <FrescuraDot f={f} />
+                  <span className="text-sm text-silver truncate">{f.nombre}</span>
+                </div>
                 {f.esDiferencial && f.componentes && (
                   <div className="text-[10px] text-muted/70 mt-0.5">
                     Chile {f.componentes.tpm !== null ? f.componentes.tpm.toFixed(2) + '%' : '—'} · Fed{' '}
