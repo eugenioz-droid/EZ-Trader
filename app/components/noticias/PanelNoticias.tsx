@@ -136,7 +136,7 @@ export default async function PanelNoticias({
             <p className="text-sm text-muted">Sin noticias para este filtro.</p>
             {impacto && (
               <p className="text-xs text-muted/60">
-                Haiku clasifica las noticias cada 15 min. Si es la primera vez,
+                Haiku clasifica las noticias cada 5 min. Si es la primera vez,
                 espera el próximo ciclo del cron.
               </p>
             )}

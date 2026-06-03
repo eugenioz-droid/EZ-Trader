@@ -15,9 +15,9 @@ export async function GET(req: NextRequest) {
     .order('publicado_at', { ascending: false })
     .limit(limite)
 
-  if (factor) {
-    query = query.eq('factor_codigo', factor)
-  }
+  // Filtro por factor: se aplica via analisis_ia (no existe factor_codigo en noticias directamente)
+  // Por ahora se ignora el parámetro para no romper la query; filtrado client-side en PanelNoticias.
+  void factor
 
   const { data, error } = await query
 
