@@ -143,19 +143,35 @@ async function crearAlertasAltoImpacto(
 
 // Clasifica las noticias nuevas (sin analisis_ia) y guarda los resultados.
 export async function clasificarNoticiasNuevas(): Promise<number> {
-  // Noticias sin análisis todavía (LEFT JOIN → IS NULL).
-  const { data: sinAnalisis } = await supabaseAdmin
+  // Solo clasificamos noticias recientes (acota ambas queries y evita listas IN gigantes).
+  const desde = new Date(Date.now() - 3 * 24 * 3600 * 1000).toISOString()
+
+  // IDs ya clasificados (con la versión de prompt actual). supabase-js NO acepta
+  // un query builder como subquery en .in(); hay que traer los IDs y pasarlos como lista.
+  const { data: analizadas } = await supabaseAdmin
+    .from('analisis_ia')
+    .select('noticia_id, created_at')
+    .eq('prompt_version', PROMPT_VERSION)
+    .gte('created_at', desde)
+  const idsAnalizados = (analizadas ?? []).map((a) => a.noticia_id)
+
+  // Noticias recientes sin análisis todavía.
+  let queryNoticias = supabaseAdmin
     .from('noticias')
     .select('id, titulo, resumen')
-    .not('id', 'in',
-      supabaseAdmin
-        .from('analisis_ia')
-        .select('noticia_id')
-        .eq('prompt_version', PROMPT_VERSION)
-    )
+    .gte('publicado_at', desde)
     .order('publicado_at', { ascending: false })
     .limit(MAX_POR_BATCH)
 
+  if (idsAnalizados.length > 0) {
+    queryNoticias = queryNoticias.not('id', 'in', `(${idsAnalizados.join(',')})`)
+  }
+
+  const { data: sinAnalisis, error: errNoticias } = await queryNoticias
+  if (errNoticias) {
+    console.error('Clasificador: error buscando noticias sin análisis:', errNoticias.message)
+    return 0
+  }
   if (!sinAnalisis || sinAnalisis.length === 0) return 0
 
   const { instrumentoId, factorMap } = await getRef()

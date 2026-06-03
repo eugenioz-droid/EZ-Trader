@@ -45,27 +45,45 @@ async function obtenerUSDCLP(): Promise<PrecioDato | null> {
   }
 }
 
-// Cobre y DXY via Yahoo Finance (sin key, gratuito)
-async function obtenerYahoo(simbolo: string, codigo_serie: string): Promise<PrecioDato | null> {
-  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${simbolo}?interval=1d&range=1d`
-  const res = await fetch(url)
-  if (!res.ok) throw new Error(`Yahoo Finance error: ${res.status}`)
-  const data = await res.json()
-  const precio = data?.chart?.result?.[0]?.meta?.regularMarketPrice
-  if (!precio) return null
+// Cobre, DXY y Petróleo via Stooq (CSV gratis, sin key).
+// IMPORTANTE: Yahoo Finance bloquea las IPs de Cloudflare Workers (funciona en local
+// pero devuelve vacío en producción). Stooq sí responde desde Workers.
+// `factor` ajusta unidades: cobre viene en centavos/lb en Stooq → /100 para USD/lb.
+async function obtenerStooq(
+  simbolo: string,
+  codigo_serie: string,
+  factor = 1,
+): Promise<PrecioDato | null> {
+  const url = `https://stooq.com/q/l/?s=${simbolo}&f=sd2t2ohlcv&h&e=csv`
+  const res = await fetch(url, { headers: { 'User-Agent': 'Mozilla/5.0 (EZ-Trader/1.0)' } })
+  if (!res.ok) throw new Error(`Stooq ${simbolo}: HTTP ${res.status}`)
+  const csv = await res.text()
+  // Formato: Symbol,Date,Time,Open,High,Low,Close,Volume
+  const lineas = csv.trim().split('\n')
+  if (lineas.length < 2) return null
+  const cols = lineas[1].split(',')
+  const fecha = cols[1] // YYYY-MM-DD
+  const hora = cols[2] // HH:MM:SS
+  const close = parseFloat(cols[6])
+  if (!isFinite(close) || cols[6] === 'N/D') return null
+  // Fecha del dato según Stooq (UTC); si viene N/D usamos ahora.
+  const fechaDato =
+    fecha && fecha !== 'N/D'
+      ? new Date(`${fecha}T${hora && hora !== 'N/D' ? hora : '00:00:00'}Z`).toISOString()
+      : new Date().toISOString()
   return {
     codigo_serie,
-    valor: precio,
-    fecha_dato: new Date().toISOString()
+    valor: close * factor,
+    fecha_dato: fechaDato,
   }
 }
 
 export async function obtenerPrecios(): Promise<PrecioDato[]> {
   const resultados = await Promise.allSettled([
     obtenerUSDCLP(),
-    obtenerYahoo('HG=F',      'COBRE'),
-    obtenerYahoo('DX-Y.NYB',  'DXY'),
-    obtenerYahoo('CL=F',      'PETROLEO'),  // WTI crudo (Tier 2)
+    obtenerStooq('hg.f', 'COBRE', 0.01),  // Stooq da cobre en ¢/lb → ×0.01 = USD/lb
+    obtenerStooq('dx.f', 'DXY'),          // futuro del índice dólar (≈ DXY)
+    obtenerStooq('cl.f', 'PETROLEO'),     // WTI crudo (Tier 2)
     obtenerFed(),
     obtenerTPM(),
   ])
