@@ -14,6 +14,7 @@ interface Analisis {
   direccion_estimada: 'sube' | 'baja' | 'neutral' | null
   factor_codigo: string | null
   resumen_ia: string | null
+  confianza: number | null
 }
 
 interface Noticia {
@@ -33,7 +34,7 @@ async function getNoticias(fuente?: string, impacto?: string): Promise<Noticia[]
     .select(`
       id, titulo, resumen, url, publicado_at,
       fuentes ( nombre ),
-      analisis_ia ( impacto, direccion_estimada, resumen_ia, factor_id,
+      analisis_ia ( impacto, direccion_estimada, resumen_ia, confianza, factor_id,
         factores ( codigo )
       )
     `)
@@ -52,7 +53,7 @@ async function getNoticias(fuente?: string, impacto?: string): Promise<Noticia[]
   const noticias: Noticia[] = (data ?? []).map((n) => {
     const arr = n.analisis_ia as unknown as Array<{
       impacto: string; direccion_estimada: string; resumen_ia: string;
-      factor_id: number | null; factores: { codigo: string } | null
+      confianza: number | null; factor_id: number | null; factores: { codigo: string } | null
     }>
     const a = arr?.[0] ?? null
     return {
@@ -68,6 +69,7 @@ async function getNoticias(fuente?: string, impacto?: string): Promise<Noticia[]
             direccion_estimada: a.direccion_estimada as Analisis['direccion_estimada'],
             factor_codigo: a.factores?.codigo ?? null,
             resumen_ia: a.resumen_ia,
+            confianza: a.confianza ?? null,
           }
         : null,
     }
@@ -130,9 +132,15 @@ export default async function PanelNoticias({
 
       <div className="divide-y divide-line/60">
         {noticias.length === 0 && (
-          <p className="px-4 py-8 text-sm text-muted text-center">
-            Sin noticias para este filtro.
-          </p>
+          <div className="px-4 py-8 text-center space-y-1">
+            <p className="text-sm text-muted">Sin noticias para este filtro.</p>
+            {impacto && (
+              <p className="text-xs text-muted/60">
+                Haiku clasifica las noticias cada 15 min. Si es la primera vez,
+                espera el próximo ciclo del cron.
+              </p>
+            )}
+          </div>
         )}
         {noticias.map((n) => {
           const min = minutosDesde(n.publicado_at)
@@ -172,6 +180,18 @@ export default async function PanelNoticias({
                 {a?.impacto && (
                   <span className={`text-[10px] font-semibold px-1.5 py-0.5 rounded-full ${IMPACTO_STYLE[a.impacto]}`}>
                     {a.impacto.toUpperCase()}
+                  </span>
+                )}
+                {/* Confianza IA — solo visible cuando hay motivo para dudar (<85%) */}
+                {a?.confianza !== null && a?.confianza !== undefined && a.confianza < 0.85 && (
+                  <span className={`text-[10px] px-1.5 py-0.5 rounded border font-mono ${
+                    a.confianza >= 0.65
+                      ? 'text-amber-400 border-amber-700/40 bg-amber-900/10'
+                      : 'text-muted border-line bg-elevated'
+                  }`}
+                    title={`Confianza IA: ${Math.round(a.confianza * 100)}%. ${a.confianza < 0.65 ? 'Clasificación incierta, verifica.' : 'Moderada, usa tu criterio.'}`}
+                  >
+                    IA {Math.round(a.confianza * 100)}%
                   </span>
                 )}
                 {/* Factor + dirección */}

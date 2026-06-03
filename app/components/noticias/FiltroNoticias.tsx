@@ -13,7 +13,7 @@ const IMPACTOS = [
   { valor: '', label: 'Todo impacto' },
   { valor: 'alto', label: '🔴 Alto' },
   { valor: 'medio', label: '🟡 Medio' },
-  { valor: 'bajo', label: 'Bajo' },
+  { valor: 'bajo', label: '🟢 Bajo' },
 ]
 
 export default function FiltroNoticias() {

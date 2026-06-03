@@ -90,11 +90,18 @@ export default function PanelAgente() {
     }
   }
 
-  function onKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+  function onKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
       enviar()
     }
+  }
+
+  // Auto-crece el textarea con el contenido
+  function onInput(e: React.FormEvent<HTMLTextAreaElement>) {
+    const el = e.currentTarget
+    el.style.height = 'auto'
+    el.style.height = `${el.scrollHeight}px`
   }
 
   const esProfundo = modo === 'profunda'
@@ -188,28 +195,31 @@ export default function PanelAgente() {
           </div>
 
           {/* Input + Enviar */}
-          <div className="flex gap-2">
-            <input
-              type="text"
+          <div className="flex gap-2 items-end">
+            <textarea
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={onKeyDown}
+              onInput={onInput}
               disabled={cargando}
-              placeholder="Pregunta sobre el mercado USD/CLP…"
-              className="flex-1 bg-panel border border-line rounded-lg px-3 py-2 text-sm text-silver placeholder:text-muted focus:outline-none focus:border-brand disabled:opacity-50"
+              rows={3}
+              placeholder={`Pregunta sobre el mercado USD/CLP…\n(Enter envía · Shift+Enter = salto de línea)`}
+              className="flex-1 bg-panel border border-line rounded-lg px-3 py-2 text-sm text-silver placeholder:text-muted/60 focus:outline-none focus:border-brand disabled:opacity-50 resize-none overflow-hidden leading-relaxed"
+              style={{ minHeight: '72px', maxHeight: '160px' }}
             />
             <button
               onClick={enviar}
               disabled={cargando || !input.trim()}
-              className={`px-3 py-2 rounded-lg text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed ${
+              className={`px-3 py-2 rounded-lg text-sm font-medium disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0 ${
                 esProfundo
                   ? 'bg-amber-400 text-black hover:bg-amber-300'
                   : 'bg-brand text-black hover:bg-brand/90'
               }`}
             >
-              {esProfundo ? '🔍 Enviar · Opus' : 'Enviar · Sonnet'}
+              {esProfundo ? '🔍 Opus' : 'Enviar'}
             </button>
           </div>
+          <p className="text-[10px] text-muted/40 text-right mt-1">Enter envía · Shift+Enter = nueva línea</p>
         </div>
       )}
     </div>

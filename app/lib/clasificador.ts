@@ -1,6 +1,18 @@
 import Anthropic from '@anthropic-ai/sdk'
-import { anthropic, MODELOS, registrarUso, calcularCosto } from './anthropic'
+import { anthropic, MODELOS, registrarUso } from './anthropic'
 import { supabaseAdmin } from './supabase'
+
+const FACTOR_LABEL: Record<string, string> = {
+  A1: 'Cobre', A2: 'DXY', A3: 'Tasas', A4: 'Petróleo',
+  A5: 'VIX', B1: 'China', B2: 'Fed', B3: 'Geopolítica',
+  B4: 'BCCh', B5: 'Política', B6: 'IPC',
+}
+
+const DIRECCION_LABEL: Record<string, string> = {
+  sube: '↑ USD/CLP (peso débil)',
+  baja: '↓ USD/CLP (peso fuerte)',
+  neutral: 'neutro',
+}
 
 // Versión del prompt. Al cambiarla, todas las noticias quedan re-elegibles.
 const PROMPT_VERSION = 'v1'
@@ -84,6 +96,51 @@ async function getRef() {
   return { instrumentoId: instrumento?.id ?? null, factorMap }
 }
 
+// Crea alertas en la tabla `alertas` para noticias de impacto ALTO con confianza ≥ 0.65.
+// Evita duplicados: no re-alerta la misma noticia.
+async function crearAlertasAltoImpacto(
+  rows: Array<{ noticia_id: number; instrumento_id: number | null; impacto: string; direccion_estimada: string; resumen_ia: string | null; confianza: number | null; factor_id: number | null }>,
+  items: ClasificacionItem[],
+  instrumentoId: number | null
+): Promise<void> {
+  const altas = rows.filter(
+    (r) => r.impacto === 'alto' && (r.confianza === null || r.confianza >= 0.65)
+  )
+  if (altas.length === 0) return
+
+  // IDs de noticias ya alertadas (para dedup)
+  const noticiaIds = altas.map((r) => r.noticia_id)
+  const { data: yaAlertadas } = await supabaseAdmin
+    .from('alertas')
+    .select('noticia_id')
+    .in('noticia_id', noticiaIds)
+
+  const yaSet = new Set((yaAlertadas ?? []).map((a) => a.noticia_id))
+
+  const alertasNuevas = altas
+    .filter((r) => !yaSet.has(r.noticia_id))
+    .map((r) => {
+      const item = items.find((i) => i.id === r.noticia_id)
+      const factorLabel = item ? (FACTOR_LABEL[item.factor] ?? item.factor) : 'Mercado'
+      const dirLabel = item ? (DIRECCION_LABEL[item.direccion] ?? '') : ''
+      const confianzaTexto = r.confianza !== null ? ` (IA ${Math.round(r.confianza * 100)}%)` : ''
+      return {
+        tipo: 'agente' as const,
+        noticia_id: r.noticia_id,
+        instrumento_id: instrumentoId,
+        severidad: 'alta' as const,
+        titulo: `[Haiku] ${factorLabel} · ${dirLabel}`,
+        mensaje: r.resumen_ia ? `${r.resumen_ia}${confianzaTexto}` : `Noticia de alto impacto detectada${confianzaTexto}`,
+        contexto: { factor: item?.factor, direccion: item?.direccion, confianza: r.confianza },
+      }
+    })
+
+  if (alertasNuevas.length > 0) {
+    const { error } = await supabaseAdmin.from('alertas').insert(alertasNuevas)
+    if (error) console.error('Clasificador: error creando alertas:', error.message)
+  }
+}
+
 // Clasifica las noticias nuevas (sin analisis_ia) y guarda los resultados.
 export async function clasificarNoticiasNuevas(): Promise<number> {
   // Noticias sin análisis todavía (LEFT JOIN → IS NULL).
@@ -140,8 +197,13 @@ export async function clasificarNoticiasNuevas(): Promise<number> {
       const { error } = await supabaseAdmin
         .from('analisis_ia')
         .upsert(rows, { onConflict: 'noticia_id', ignoreDuplicates: false })
-      if (error) console.error('Clasificador: error guardando analisis_ia:', error.message)
-      else totalClasificadas += rows.length
+      if (error) {
+        console.error('Clasificador: error guardando analisis_ia:', error.message)
+      } else {
+        totalClasificadas += rows.length
+        // Crear alertas para noticias de ALTO impacto con confianza razonable (≥0.65)
+        await crearAlertasAltoImpacto(rows, items, instrumentoId)
+      }
     }
   } catch (err) {
     console.error('Clasificador: error en batch Haiku:', err)

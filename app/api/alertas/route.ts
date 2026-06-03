@@ -4,7 +4,7 @@ import { supabaseAdmin } from '@/app/lib/supabase'
 export async function GET() {
   const { data, error } = await supabaseAdmin
     .from('alertas')
-    .select('id, titulo, mensaje, severidad, disparada_at, leida')
+    .select('id, titulo, mensaje, severidad, tipo, disparada_at, leida')
     .order('disparada_at', { ascending: false })
     .limit(20)
 
