@@ -251,7 +251,7 @@ BASE DE DATOS (Supabase PostgreSQL)
 | 10.4  | **Calidad de señal (auditado 2026-06-03)** — subtareas abajo. Google News es baseline pero con latencia/ruido; falta calendario, fuentes primarias y factores clave | 🔨 | TÚ+YO |
 | 10.4.1 | Podar Google News (de 5→2 locales) + agregar **Financial Juice** (squawk RT) y **Fed RSS** (primaria) ✓ verificadas | ☑ | YO |
 | 10.4.2 | **Activar VIX** (Stooq `vi.f`, migración 0008) — risk-on/off Tier 2, en contexto del agente | ☑ | YO |
-| 10.4.3 | **BCCh**: comunicados RPM (fuente primaria CLP) + calendario de reuniones 2026 (8 fechas) | ☐ | YO |
+| 10.4.3 | **BCCh**: comunicados RPM + calendario de reuniones 2026 (8 fechas) ✓. BCCh no tiene RSS → comunicado/decisión vía Google News acotado (fuente nueva, migración 0009, pipeline Haiku). Calendario = constante tipada `app/lib/calendario.ts` (8 RPM, marca IPoM), inyectado al contexto del agente + briefing para anticipar el catalizador del diferencial de tasas | ☑ | YO |
 | 10.4.4 | **🗓️ Calendario económico** (Finnhub/ForexFactory JSON): catalizadores agendados (NFP/CPI/FOMC/IPC Chile/TPM) → agente anticipatorio | ☐ | TÚ+YO |
 | 10.4.5 | Expectativas de tasas (CME FedWatch / futuros Fed) — dirección del diferencial | ☐ | YO |
 | 10.4.6 | **Síntesis de sesión** del agente (1×/día, Sonnet): lectura coherente de factores+noticias del día | ☐ | YO |

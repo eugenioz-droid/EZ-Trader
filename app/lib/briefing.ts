@@ -1,4 +1,5 @@
 import { supabaseAdmin } from './supabase'
+import { contextoCalendarioRPM } from './calendario'
 
 const SERIES = ['USDCLP', 'COBRE', 'DXY']
 
@@ -68,6 +69,9 @@ export async function generarBriefing(): Promise<string> {
     md += `| ${dias}d: ${r.variacion >= 0 ? '+' : ''}${r.variacion.toFixed(2)}% `
     md += `| rango ${r.min.toFixed(3)}–${r.max.toFixed(3)}\n`
   }
+
+  md += `\n## Política monetaria (BCCh)\n`
+  md += contextoCalendarioRPM() + '\n'
 
   md += `\n## Historial reciente (hasta ${dias} días)\n`
   for (const h of historiales) {

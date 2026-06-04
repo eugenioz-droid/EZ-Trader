@@ -1,6 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { anthropic, MODELOS, registrarUso } from './anthropic'
 import { supabaseAdmin } from './supabase'
+import { contextoCalendarioRPM } from './calendario'
 
 // Versión del prompt — sirve para versionar y comparar calidad si lo cambiamos.
 export const PROMPT_VERSION = 'v1'
@@ -26,6 +27,9 @@ TIER 1 (dominantes, datos de mercado):
 TIER 2 (fuertes): Petróleo (Chile importador; sube → USD/CLP sube), VIX (risk-off → USD/CLP sube), China (vía cobre: datos chinos fuertes → cobre → peso fuerte), Fed/FOMC (hawkish → dólar sube → USD/CLP sube), Geopolítica (escalada → USD/CLP sube; puede anular temporalmente al cobre).
 
 TIER 3 (episódicos pero violentos): Intervención del Banco Central de Chile (defender el peso → USD/CLP baja brusco), política local / retiros AFP (incertidumbre → USD/CLP sube), IPC Chile (sobre lo esperado → sesgo tasas altas → peso fuerte).
+
+# Calendario de política monetaria (BCCh)
+Cuando el contexto incluya el calendario del Banco Central de Chile, úsalo de forma ANTICIPATORIA: una RPM próxima —sobre todo si es reunión con IPoM— es un catalizador AGENDADO del diferencial de tasas. Advierte la volatilidad esperada y evita recomendar abrir posición justo antes sin gestión de riesgo. Clave: lo que mueve al USD/CLP es la SORPRESA frente a lo esperado (y el sesgo del comunicado/IPoM), no el nivel de tasa en sí. Si hubo una RPM en los últimos días, busca su decisión y sesgo en las noticias.
 
 # Regla de resolución de conflictos
 1. En condiciones normales mandan cobre y DXY juntos: si ambos apuntan igual, esa es la lectura dominante.
@@ -85,6 +89,9 @@ async function construirContexto(): Promise<string> {
 
 ### Datos de mercado (último valor)
 ${factores.length ? factores.join('\n') : 'Sin datos de mercado disponibles.'}
+
+### Calendario de política monetaria (BCCh)
+${contextoCalendarioRPM()}
 
 ### Noticias recientes
 ${lineasNoticias.length ? lineasNoticias.join('\n') : 'Sin noticias recientes.'}`

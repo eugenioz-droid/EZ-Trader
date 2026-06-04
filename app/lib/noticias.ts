@@ -46,6 +46,17 @@ const FEEDS = [
     fuente_nombre: 'Reuters RSS',
     idioma: 'es',
   },
+  // FUENTE PRIMARIA CLP (10.4.3): decisiones de política monetaria del BCCh (RPM/TPM).
+  // El BCCh no publica RSS, así que usamos Google News acotado a la decisión en español.
+  // Ventana 14d para cubrir el antes/después de cada RPM (mensual-ish). El comunicado y
+  // su cobertura entran al mismo pipeline (dedup + clasificación Haiku + alertas). El
+  // calendario anticipatorio vive aparte en app/lib/calendario.ts.
+  {
+    nombre: 'Google News - Banco Central Chile (RPM/TPM)',
+    url: 'https://news.google.com/rss/search?q=%22Banco+Central%22+Chile+TPM+tasa+pol%C3%ADtica+monetaria+when:14d&hl=es-419&gl=CL&ceid=CL:es-419',
+    fuente_nombre: 'Banco Central de Chile (RPM)',
+    idioma: 'es',
+  },
 ]
 
 export interface NoticiaRaw {
