@@ -74,11 +74,27 @@ async function obtenerTwelveData(simbolo: string, codigoSerie: string): Promise<
 
 const obtenerUSDCLP = () => obtenerTwelveData('USD/CLP', 'USDCLP')
 
-// Cobre via Twelve Data (COPPER, precio en USD/lb).
-// Movido desde Stooq (hg.f) porque Stooq empezó a servir un challenge JS de bot
-// protection que devuelve HTML en vez del CSV → close no se parsea → precio rechazado.
-// Twelve Data devuelve el precio directo en USD/lb, sin conversión de unidades.
-const obtenerCobre = () => obtenerTwelveData('COPPER', 'COBRE')
+// Cobre via Yahoo Finance v8 chart API (HG=F, COMEX copper futures, USD/lb).
+// Stooq hg.f dejó de responder con CSV (devuelve página "does not exist").
+// Twelve Data requiere plan pago para HG1!. Yahoo v8 (/v8/finance/chart/) es un
+// endpoint distinto al sitio web principal — el bloqueo conocido de Workers afectaba
+// finance.yahoo.com; esta URL ha mostrado responder correctamente.
+// Si Workers lo bloquea igual, fetchTimeout devuelve error → null → frescura ámbar.
+async function obtenerCobre(): Promise<PrecioDato | null> {
+  const url = 'https://query1.finance.yahoo.com/v8/finance/chart/HG%3DF?interval=1d&range=1d'
+  const res = await fetchTimeout(url, 6000, {
+    headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
+  })
+  if (!res.ok) throw new Error(`Yahoo HG=F: ${res.status}`)
+  const data = await res.json()
+  const price = data?.chart?.result?.[0]?.meta?.regularMarketPrice
+  if (!price) return null
+  return {
+    codigo_serie: 'COBRE',
+    valor: price, // USD/lb directo, sin conversión
+    fecha_dato: new Date().toISOString(),
+  }
+}
 
 // DXY, Petróleo y VIX via Stooq (CSV gratis, sin key).
 // IMPORTANTE: Yahoo Finance bloquea las IPs de Cloudflare Workers (funciona en local
