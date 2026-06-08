@@ -94,11 +94,13 @@ Objetivo: mantener orden histórico sin perder pendientes.
 Objetivo: trabajar ordenados sin dejar la embarrada.
 
 ### Regla principal
-- El agente debe dar instrucciones de Git paso a paso en cada sesión, asumiendo que el usuario no domina Git.
+- El agente ejecuta los comandos Git directamente (tiene acceso a terminal).
+- **Nunca hace push, merge ni ninguna acción que afecte `origin` sin pedir confirmación explícita al usuario primero.**
+- Para todo lo demás (status, add, commit, crear ramas, explorar) puede ejecutarlo sin preguntar.
 
 ### Terminal a usar
-- Preferir **terminal integrada de VS Code** (Command Prompt o PowerShell 7) dentro de la carpeta del proyecto.
-- Git Bash ya no es requisito para este repo; usarlo solo como respaldo si el terminal de VS Code falla.
+- El agente usa su acceso directo a terminal para ejecutar Git.
+- Si algo falla en la terminal del agente, se pide al usuario que lo ejecute en la terminal integrada de VS Code (Command Prompt o PowerShell 7).
 
 ### Checklist mínimo por cambio
 1. Revisar estado: `git status`
