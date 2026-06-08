@@ -50,7 +50,7 @@ export function calcularCosto(modelo: string, uso: UsoTokens): number {
   return costo
 }
 
-type Proposito = 'agente' | 'agente_profundo' | 'clasificacion'
+type Proposito = 'agente' | 'agente_profundo' | 'clasificacion' | 'sintesis_diaria'
 
 // Registra cada llamada a Claude en el ledger uso_ia. No lanza: si el registro
 // falla, lo logea pero no rompe la respuesta al usuario.

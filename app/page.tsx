@@ -11,6 +11,7 @@ import PanelAlertas from './components/ui/PanelAlertas'
 import CronStatus from './components/ui/CronStatus'
 import Logo from './components/ui/Logo'
 import BotonLogout from './components/ui/BotonLogout'
+import BannerSintesis from './components/ui/BannerSintesis'
 
 export const dynamic = 'force-dynamic'
 
@@ -69,6 +70,9 @@ export default async function Home({
           <BotonLogout />
         </div>
       </div>
+
+      {/* Síntesis diaria */}
+      <BannerSintesis />
 
       {/* ===== DESKTOP LAYOUT (lg+) ===== */}
       <div className="hidden lg:grid lg:grid-cols-12 lg:h-[calc(100vh-162px)]">

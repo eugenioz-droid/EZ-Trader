@@ -4,6 +4,7 @@ import { obtenerPrecios, guardarPrecios } from '@/app/lib/mercado'
 import { evaluarAlertas } from '@/app/lib/alertas'
 import { clasificarNoticiasNuevas } from '@/app/lib/clasificador'
 import { registrarCorrida } from '@/app/lib/cronlog'
+import { generarSintesisSiCorresponde } from '@/app/lib/sintesis'
 
 // Clave secreta para que solo Supabase pueda llamar este endpoint
 const CRON_SECRET = process.env.CRON_SECRET
@@ -57,6 +58,14 @@ export async function GET(req: NextRequest) {
     resultados.alertas = { nuevas: alertasNuevas }
   } catch (err) {
     resultados.alertas = { error: String(err) }
+  }
+
+  // 5. Síntesis diaria — solo una vez al día a partir de las 07:00 hora Chile
+  try {
+    const generada = await generarSintesisSiCorresponde()
+    resultados.sintesis = { generada }
+  } catch (err) {
+    resultados.sintesis = { error: String(err) }
   }
 
   resultados.duracion_ms = Date.now() - inicio
