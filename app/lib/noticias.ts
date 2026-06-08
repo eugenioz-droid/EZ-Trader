@@ -105,7 +105,22 @@ async function descargarFeed(feed: typeof FEEDS[number]): Promise<NoticiaRaw[]> 
 export async function obtenerNoticias(): Promise<NoticiaRaw[]> {
   // Descarga todos los feeds en paralelo (más rápido que secuencial).
   const resultados = await Promise.all(FEEDS.map(descargarFeed))
-  return resultados.flat()
+  const todas = resultados.flat()
+
+  // Dedup en memoria: Google News genera URLs distintas para la misma noticia
+  // cuando aparece en múltiples búsquedas (distinto base64 de redirect).
+  // El UNIQUE de BD filtra por URL, no por contenido. Aquí filtramos por título
+  // (lowercased) para evitar insertar el mismo artículo dos veces desde feeds distintos.
+  const titulosVistos = new Set<string>()
+  const urlsVistas = new Set<string>()
+  return todas.filter((n) => {
+    const tituloNorm = n.titulo.trim().toLowerCase()
+    const urlNorm = n.url.trim()
+    if (titulosVistos.has(tituloNorm) || urlsVistas.has(urlNorm)) return false
+    titulosVistos.add(tituloNorm)
+    urlsVistas.add(urlNorm)
+    return true
+  })
 }
 
 export async function guardarNoticias(noticias: NoticiaRaw[]): Promise<number> {
