@@ -1,7 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk'
 import { anthropic, MODELOS, registrarUso } from './anthropic'
 import { supabaseAdmin } from './supabase'
-import { contextoCalendarioRPM } from './calendario'
+import { contextoCalendarioCompleto } from './calendario'
 
 // Versión del prompt — sirve para versionar y comparar calidad si lo cambiamos.
 export const PROMPT_VERSION = 'v1'
@@ -90,8 +90,8 @@ async function construirContexto(): Promise<string> {
 ### Datos de mercado (último valor)
 ${factores.length ? factores.join('\n') : 'Sin datos de mercado disponibles.'}
 
-### Calendario de política monetaria (BCCh)
-${contextoCalendarioRPM()}
+### Catalizadores agendados (próximos 14 días)
+${contextoCalendarioCompleto()}
 
 ### Noticias recientes
 ${lineasNoticias.length ? lineasNoticias.join('\n') : 'Sin noticias recientes.'}`
