@@ -80,26 +80,25 @@ const obtenerUSDCLP = () => obtenerTwelveData('USD/CLP', 'USDCLP')
 // endpoint distinto al sitio web principal — el bloqueo conocido de Workers afectaba
 // finance.yahoo.com; esta URL ha mostrado responder correctamente.
 // Si Workers lo bloquea igual, fetchTimeout devuelve error → null → frescura ámbar.
-async function obtenerCobre(): Promise<PrecioDato | null> {
-  const url = 'https://query1.finance.yahoo.com/v8/finance/chart/HG%3DF?interval=1d&range=1d'
+const obtenerCobre    = () => obtenerYahooV8('HG=F',      'COBRE')    // COMEX copper USD/lb
+const obtenerDXY      = () => obtenerYahooV8('DX-Y.NYB',  'DXY')      // Dollar Index
+const obtenerPetroleo = () => obtenerYahooV8('CL=F',      'PETROLEO') // WTI crude
+const obtenerVIX      = () => obtenerYahooV8('^VIX',      'VIX')      // CBOE VIX
+
+// Yahoo Finance v8: helper genérico. Confirmado funcional desde Workers (cobre ya lo usa).
+async function obtenerYahooV8(simbolo: string, codigoSerie: string): Promise<PrecioDato | null> {
+  const url = `https://query1.finance.yahoo.com/v8/finance/chart/${encodeURIComponent(simbolo)}?interval=1d&range=1d`
   const res = await fetchTimeout(url, 6000, {
     headers: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' },
   })
-  if (!res.ok) throw new Error(`Yahoo HG=F: ${res.status}`)
+  if (!res.ok) throw new Error(`Yahoo v8 ${simbolo}: ${res.status}`)
   const data = await res.json()
   const price = data?.chart?.result?.[0]?.meta?.regularMarketPrice
   if (!price) return null
-  return {
-    codigo_serie: 'COBRE',
-    valor: price, // USD/lb directo, sin conversión
-    fecha_dato: new Date().toISOString(),
-  }
+  return { codigo_serie: codigoSerie, valor: price, fecha_dato: new Date().toISOString() }
 }
 
-// DXY, Petróleo y VIX via Stooq (CSV gratis, sin key).
-// IMPORTANTE: Yahoo Finance bloquea las IPs de Cloudflare Workers (funciona en local
-// pero devuelve vacío en producción). Stooq sí responde desde Workers.
-// Si Stooq también empieza a bloquear estos símbolos, moverlos a Twelve Data igual que COBRE.
+// Stooq: mantenido como fallback por si algún símbolo no está en Yahoo.
 async function obtenerStooq(
   simbolo: string,
   codigo_serie: string,
@@ -130,10 +129,10 @@ async function obtenerStooq(
 export async function obtenerPrecios(): Promise<PrecioDato[]> {
   const resultados = await Promise.allSettled([
     obtenerUSDCLP(),
-    obtenerCobre(),                        // Twelve Data COPPER (USD/lb)
-    obtenerStooq('dx.f', 'DXY'),          // futuro del índice dólar (≈ DXY)
-    obtenerStooq('cl.f', 'PETROLEO'),     // WTI crudo (Tier 2)
-    obtenerStooq('vi.f', 'VIX'),          // futuro VIX (risk-on/off, Tier 2)
+    obtenerCobre(),
+    obtenerDXY(),
+    obtenerPetroleo(),
+    obtenerVIX(),
     obtenerFed(),
     obtenerTPM(),
   ])
