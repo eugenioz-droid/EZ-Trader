@@ -58,24 +58,32 @@ async function obtenerTPM(): Promise<PrecioDato | null> {
   }
 }
 
-// USD/CLP via Twelve Data
-async function obtenerUSDCLP(): Promise<PrecioDato | null> {
-  const url = `https://api.twelvedata.com/price?symbol=USD/CLP&apikey=${TWELVE_DATA_KEY}`
+// Twelve Data: helper genérico para un símbolo (forex o commodity).
+async function obtenerTwelveData(simbolo: string, codigoSerie: string): Promise<PrecioDato | null> {
+  const url = `https://api.twelvedata.com/price?symbol=${encodeURIComponent(simbolo)}&apikey=${TWELVE_DATA_KEY}`
   const res = await fetchTimeout(url)
-  if (!res.ok) throw new Error(`Twelve Data error: ${res.status}`)
+  if (!res.ok) throw new Error(`Twelve Data ${simbolo}: ${res.status}`)
   const data = await res.json()
   if (!data.price) return null
   return {
-    codigo_serie: 'USDCLP',
+    codigo_serie: codigoSerie,
     valor: parseFloat(data.price),
-    fecha_dato: new Date().toISOString()
+    fecha_dato: new Date().toISOString(),
   }
 }
 
-// Cobre, DXY y Petróleo via Stooq (CSV gratis, sin key).
+const obtenerUSDCLP = () => obtenerTwelveData('USD/CLP', 'USDCLP')
+
+// Cobre via Twelve Data (COPPER, precio en USD/lb).
+// Movido desde Stooq (hg.f) porque Stooq empezó a servir un challenge JS de bot
+// protection que devuelve HTML en vez del CSV → close no se parsea → precio rechazado.
+// Twelve Data devuelve el precio directo en USD/lb, sin conversión de unidades.
+const obtenerCobre = () => obtenerTwelveData('COPPER', 'COBRE')
+
+// DXY, Petróleo y VIX via Stooq (CSV gratis, sin key).
 // IMPORTANTE: Yahoo Finance bloquea las IPs de Cloudflare Workers (funciona en local
 // pero devuelve vacío en producción). Stooq sí responde desde Workers.
-// `factor` ajusta unidades: cobre viene en centavos/lb en Stooq → /100 para USD/lb.
+// Si Stooq también empieza a bloquear estos símbolos, moverlos a Twelve Data igual que COBRE.
 async function obtenerStooq(
   simbolo: string,
   codigo_serie: string,
@@ -106,7 +114,7 @@ async function obtenerStooq(
 export async function obtenerPrecios(): Promise<PrecioDato[]> {
   const resultados = await Promise.allSettled([
     obtenerUSDCLP(),
-    obtenerStooq('hg.f', 'COBRE', 0.01),  // Stooq da cobre en ¢/lb → ×0.01 = USD/lb
+    obtenerCobre(),                        // Twelve Data COPPER (USD/lb)
     obtenerStooq('dx.f', 'DXY'),          // futuro del índice dólar (≈ DXY)
     obtenerStooq('cl.f', 'PETROLEO'),     // WTI crudo (Tier 2)
     obtenerStooq('vi.f', 'VIX'),          // futuro VIX (risk-on/off, Tier 2)
