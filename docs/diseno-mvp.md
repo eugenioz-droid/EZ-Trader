@@ -2,7 +2,7 @@
 
 > Este documento registra el PORQUÉ de las decisiones de diseño. Cuando surja la duda de
 > "¿por qué hicimos esto así?", la respuesta está acá, fechada. El QUÉ (tareas) vive en
-> `ez-trader-programa.md`. La base de conocimiento del agente vive en `docs/factores-usd-clp.md`.
+`docs/programa-versiones/programa_v1.00.md`. La base de conocimiento del agente vive en `docs/factores-usd-clp.md`.
 
 ---
 
