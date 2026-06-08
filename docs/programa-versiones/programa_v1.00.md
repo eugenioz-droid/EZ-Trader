@@ -1,5 +1,10 @@
 # Programa de Trabajo - EZ Trader
 
+> **⚠️ COMPLETADO / HISTÓRICO (cerrado 2026-06-08).** El proyecto pivotó a **hub público de
+> noticias económicas**. El programa vigente es `programa_v2.00.md`. Este documento se conserva
+> como registro de la herramienta personal v1.00. La Fase 11 (estrategias) quedó diferida y se
+> retoma como Fase 7 del v2.00. Todo el pipeline y el dashboard de aquí se reutilizan.
+
 **Sistema web personal de análisis de noticias y apoyo para trading CDF (USD/CLP)**
 
 **Objetivo:** Web personal que recopila noticias automáticamente, las analiza con IA, muestra cotizaciones en tiempo real, guarda historial y permite consultar a un agente para apoyar decisiones de trading.
@@ -274,7 +279,7 @@ BASE DE DATOS (Supabase PostgreSQL)
 | 10.4.3 | **BCCh**: comunicados RPM + calendario de reuniones 2026 (8 fechas) ✓. BCCh no tiene RSS → comunicado/decisión vía Google News acotado (fuente nueva, migración 0009, pipeline Haiku). Calendario = constante tipada `app/lib/calendario.ts` (8 RPM, marca IPoM), inyectado al contexto del agente + briefing para anticipar el catalizador del diferencial de tasas | ☑ | YO |
 | 10.4.4 | **🗓️ Calendario económico** (Finnhub/ForexFactory JSON): catalizadores agendados (NFP/CPI/FOMC/IPC Chile/TPM) → agente anticipatorio | ☑ | TÚ+YO |
 | 10.4.5 | Expectativas de tasas (CME FedWatch / futuros Fed) — dirección del diferencial | ☑ | YO |
-| 10.4.6 | **Síntesis de sesión** del agente (1×/día, Sonnet): lectura coherente de factores+noticias del día | ☐ | YO |
+| 10.4.6 | **Síntesis de sesión** del agente (1×/día, Sonnet): lectura coherente de factores+noticias del día | ☑ | YO |
 | 10.4.7 | UI: etiquetar precios como "referencia · puede diferir del bróker" (honestidad vs gap MetaTrader) ✓ | ☑ | YO |
 | 10.5  | Botón Refresh on-demand de noticias (ya existía; + clasificación Haiku en el refresh, consolidado en 4.11) | ☑ | YO |
 | 10.6  | TPM real → **RESUELTO con mindicador.cl** (no se necesitó el BCCh)   | ☑        | YO     |
