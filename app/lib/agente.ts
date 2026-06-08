@@ -50,6 +50,74 @@ Cuando el contexto incluya el calendario del Banco Central de Chile, úsalo de f
 # Descargo
 Esto es apoyo educativo a la decisión, NO asesoría financiera. Ninguna estrategia garantiza ganancias.`
 
+// ── Diferencial TPM-FED: tendencia de los últimos 30 días ────────────────────
+// Calcula el diferencial actual y si se está ampliando o reduciendo.
+// Impacta directamente en el carry trade CLP: diferencial alto y creciente
+// favorece al peso; diferencial bajo o decreciente presiona al USD/CLP al alza.
+async function contextoExpectativasDiferencial(): Promise<string> {
+  const { data: series } = await supabaseAdmin
+    .from('series')
+    .select('id, codigo')
+    .in('codigo', ['TPM', 'FED'])
+
+  const idPor = new Map((series ?? []).map((s) => [s.codigo, s.id]))
+  const idTPM = idPor.get('TPM')
+  const idFED = idPor.get('FED')
+  if (!idTPM || !idFED) return ''
+
+  const desde = new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString()
+
+  const [resTPM, resFED] = await Promise.all([
+    supabaseAdmin
+      .from('datos_mercado')
+      .select('valor, fecha_dato')
+      .eq('serie_id', idTPM)
+      .gte('fecha_dato', desde)
+      .order('fecha_dato', { ascending: true }),
+    supabaseAdmin
+      .from('datos_mercado')
+      .select('valor, fecha_dato')
+      .eq('serie_id', idFED)
+      .gte('fecha_dato', desde)
+      .order('fecha_dato', { ascending: true }),
+  ])
+
+  const puntosTPM = resTPM.data ?? []
+  const puntosFED = resFED.data ?? []
+  if (puntosTPM.length === 0 || puntosFED.length === 0) return ''
+
+  const tpmActual = puntosTPM[puntosTPM.length - 1].valor
+  const fedActual = puntosFED[puntosFED.length - 1].valor
+  const difActual = tpmActual - fedActual
+
+  // Diferencial hace 30 días (o el primer punto disponible)
+  const tpmInicial = puntosTPM[0].valor
+  const fedInicial = puntosFED[0].valor
+  const difInicial = tpmInicial - fedInicial
+  const cambio = difActual - difInicial
+
+  const tendencia =
+    Math.abs(cambio) < 0.05
+      ? 'estable'
+      : cambio > 0
+        ? `ampliándose (+${cambio.toFixed(2)} pp en 30d)`
+        : `reduciéndose (${cambio.toFixed(2)} pp en 30d)`
+
+  const sesgo =
+    difActual >= 1.5
+      ? 'carry favorable al CLP (diferencial amplio)'
+      : difActual >= 0.5
+        ? 'carry levemente favorable al CLP'
+        : difActual >= 0
+          ? 'carry neutro a débil para el CLP'
+          : 'carry desfavorable al CLP (Fed por encima de TPM)'
+
+  return [
+    `- TPM Chile: ${tpmActual.toFixed(2)}% | Fed: ${fedActual.toFixed(2)}% | Diferencial: ${difActual >= 0 ? '+' : ''}${difActual.toFixed(2)} pp`,
+    `- Tendencia 30d: ${tendencia}. ${sesgo}.`,
+  ].join('\n')
+}
+
 // ── Construye el snapshot de mercado + noticias recientes para el contexto ──
 async function construirContexto(): Promise<string> {
   // Últimos valores de cada serie Tier 1
@@ -84,11 +152,15 @@ async function construirContexto(): Promise<string> {
     return `- [${fuente}] ${n.titulo}`
   })
 
+  const diferencialCtx = await contextoExpectativasDiferencial()
   const ahora = new Date().toISOString()
   return `## Contexto de mercado (al ${ahora})
 
 ### Datos de mercado (último valor)
 ${factores.length ? factores.join('\n') : 'Sin datos de mercado disponibles.'}
+
+### Diferencial de tasas TPM-FED (tendencia 30 días)
+${diferencialCtx || 'Sin datos de diferencial disponibles.'}
 
 ### Catalizadores agendados (próximos 14 días)
 ${contextoCalendarioCompleto()}
