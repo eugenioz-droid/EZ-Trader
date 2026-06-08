@@ -1,0 +1,21 @@
+{
+  "terminal.integrated.defaultProfile.windows": "Command Prompt",
+  "terminal.integrated.automationProfile.windows": {
+    "path": "C:\\Windows\\System32\\cmd.exe"
+  },
+  "terminal.integrated.profiles.windows": {
+    "Command Prompt": {
+      "path": "C:\\Windows\\System32\\cmd.exe"
+    },
+    "PowerShell": {
+      "path": "C:\\Windows\\System32\\cmd.exe"
+    },
+    "Git Bash Portable": {
+      "path": "C:\\Users\\ezalazar\\OneDrive - ACEROS AZA S.A\\Software\\Git\\PortableGit\\bin\\bash.exe"
+    }
+  },
+  "terminal.integrated.env.windows": {
+    "CLAUDE_CODE_GIT_BASH_PATH": "C:\\Users\\ezalazar\\OneDrive - ACEROS AZA S.A\\Software\\Git\\PortableGit\\bin\\bash.exe",
+    "PATH": "C:\\Users\\ezalazar\\Tools\\npm-global;C:\\Users\\ezalazar\\Tools\\node\\node-v24.16.0-win-x64;${env:PATH}"
+  }
+}

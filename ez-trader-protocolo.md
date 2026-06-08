@@ -1,5 +1,10 @@
 # Protocolo de Trabajo - EZ Trader
 
+## Jerarquia de reglas
+- Este archivo es especifico de EZ Trader.
+- Las reglas generales para todos los proyectos viven en [../PROTOCOLO_GENERAL_REP.md](../PROTOCOLO_GENERAL_REP.md).
+- Si hay conflicto, manda el protocolo general salvo que el usuario indique una excepcion explicita para EZ Trader.
+
 ## Cómo usar este programa
 
 ### 1. Estructura general
@@ -14,23 +19,20 @@
 - Siempre marca una sola tarea por vez (es más claro ver el progreso)
 
 ### 3. Cuándo agregar tareas nuevas
-- Si descubres una tarea nueva, agrega un número al final de su fase
-- Ejemplo: si tienes hasta 1.5 y necesitas agregar una, la nueva es 1.6
-- Coloca la nueva tarea al **FINAL** de su fase correspondiente
-- **NO cambies los números de tareas existentes** (causa confusión)
+- Si descubres una tarea nueva, agrégala dentro de la fase que corresponda por lógica de ejecución.
+- Si una tarea depende de otra, la dependiente debe quedar después.
+- Mantener descripciones cortas (1 línea) y accionables.
 
 ### 4. Cuándo reordenar tareas
-- Si una tarea debe hacerse **ANTES** de otra, puedes reordenarlas
-- Pero **MANTÉN los números igual**
-- Simplemente mueve la fila (el número no cambia)
-- Ejemplo: mover 2.3 antes de 2.2 está bien
+- Reordenar siempre que mejore la secuencia real de trabajo.
+- Luego de reordenar, **renumerar** para mantener la lectura simple (1.1, 1.2, 1.3...).
+- Evitar huecos, duplicados o numeración confusa.
 
 ### 5. Subtareas - Cuándo y cómo
-- Una subtarea es algo que **DEBE hacerse** como parte de una tarea principal
-- Si agregas subtarea, usa formato: `2.3.a`, `2.3.b`, `2.3.c`
-- **IMPORTANTE**: Las subtareas van **INMEDIATAMENTE** después de su tarea padre
-- Si terminas la tarea padre, las subtareas no tienen sentido (elimínalas o termínalas)
-- Evita nesting profundo (máximo 2 niveles: `2.3` → `2.3.a`)
+- Usar subtareas solo si son estrictamente necesarias.
+- Máximo recomendado: 2 subtareas por tarea principal.
+- Si aparecen muchas subtareas, convertirlas en tareas normales de la fase y renumerar.
+- Objetivo: evitar listas gigantes con nesting profundo.
 
 ### 6. Reglas importantes (para mantener orden)
 - Una tarea debe ser **INDEPENDIENTE** de otra (no depender de otra)
@@ -56,13 +58,81 @@
 
 1. **Dile al agente:** "revisa el protocolo y el programa" antes de empezar
 2. El agente NO lee estos archivos automáticamente — debe hacerlo manualmente
-3. Marcar tareas completadas en `ez-trader-programa.md` apenas se terminen (no al final)
+3. Marcar tareas completadas en el programa activo de la versión vigente dentro de `docs/programa-versiones/` apenas se terminen (no al final)
+4. Para cualquier cambio de código: el agente debe indicar siempre los comandos Git exactos (copiar/pegar) y esperar confirmación antes de push/merge
+5. Cada sesión/chat trabaja un solo proyecto. No mezclar tareas de otro proyecto en la misma sesión.
+6. Si EZ Trader aún no está ordenado según el protocolo general (estructura, versión activa, nombres, referencias), la sesión parte corrigiendo eso antes de tocar producto o código.
+
+---
+
+## Protocolo General por versiones (programa de trabajo)
+
+Objetivo: mantener orden histórico sin perder pendientes.
+
+### Estructura recomendada
+- Crear una carpeta de versiones del programa de trabajo por proyecto.
+- Ejemplo sugerido en este repo: `docs/programa-versiones/`.
+- Guardar ahí los archivos del programa por versión (uno por versión).
+- Estándar de nombre: `programa_vX.YY.md` (ejemplo: `programa_v1.00.md`, `programa_v1.01.md`).
+
+### Regla de cambio de versión
+- Cuando el usuario indique cierre de versión, congelar el archivo actual (no seguir editándolo para nuevas tareas).
+- Crear un nuevo archivo para la siguiente versión.
+- Hacer barrido de pendientes (`☐`) y pasarlos al nuevo archivo.
+- Reordenar por prioridad/dependencia y renumerar limpio.
+
+### Reglas de limpieza al abrir nueva versión
+- Reducir subtareas innecesarias.
+- Unificar tareas duplicadas o muy similares.
+- Mantener cada tarea en formato verbo + resultado esperado.
+- Si una tarea antigua ya no aplica, marcarla como descartada y no arrastrarla.
+
+---
+
+## Flujo Git guiado (obligatorio en este proyecto)
+
+Objetivo: trabajar ordenados sin dejar la embarrada.
+
+### Regla principal
+- El agente ejecuta los comandos Git directamente (tiene acceso a terminal).
+- **Nunca hace push, merge ni ninguna acción que afecte `origin` sin pedir confirmación explícita al usuario primero.**
+- Para todo lo demás (status, add, commit, crear ramas, explorar) puede ejecutarlo sin preguntar.
+
+### Terminal a usar
+- El agente usa su acceso directo a terminal para ejecutar Git.
+- Si algo falla en la terminal del agente, se pide al usuario que lo ejecute en la terminal integrada de VS Code (Command Prompt o PowerShell 7).
+
+### Checklist mínimo por cambio
+1. Revisar estado: `git status`
+2. Traer últimos cambios: `git pull origin main` (si estás en `main`)
+3. Si el cambio es mediano/grande, crear rama
+4. Hacer cambios y validar
+5. Commit con mensaje claro
+6. Push y luego integrar a `main`
+
+### ¿Cuándo crear rama?
+- **Sí crear rama** si el cambio toca lógica, UI importante, APIs, migraciones, o dura más de 20-30 min.
+- **Se puede trabajar en main** si es ajuste mínimo y de bajo riesgo (texto, typo, README, comentario corto).
+
+### Comandos base (plantilla)
+- Crear rama: `git checkout -b feat/nombre-corto`
+- Ver cambios: `git status`
+- Agregar cambios: `git add .`
+- Commit: `git commit -m "feat: descripcion corta"`
+- Subir rama: `git push -u origin feat/nombre-corto`
+
+### Convención rápida de ramas
+- `feat/...` nueva funcionalidad
+- `fix/...` corrección de bug
+- `docs/...` documentación
+- `chore/...` mantenimiento
 
 ---
 
 ## Restricciones del entorno
 
-- **PowerShell está bloqueado** en este equipo. Para comandos de terminal usar siempre **Git Bash Portable**.
+- **Preferir terminal integrada de VS Code** para comandos Git y del proyecto.
+- Si un perfil de terminal falla, cambiar de perfil (Command Prompt/PowerShell 7) antes de usar Git Bash.
 - **Netlify puede estar bloqueado por el firewall corporativo.** Confirmar con TI (pedir excepción para `*.netlify.app`). Si no es posible, migrar a Render (ya hay cuenta activa con ArmaHUB).
 - **Sin permisos de administrador.** No se pueden instalar programas con instalador (.msi, .exe con UAC). Usar siempre versiones portables (.zip) o instalación por npm/pip.
 - **Node.js portable** en `C:\Users\ezalazar\Tools\node\node-v24.16.0-win-x64`. Agregar al PATH en cada sesión de Git Bash con: `export PATH=$PATH:/c/Users/ezalazar/Tools/node/node-v24.16.0-win-x64` (o está en `.bashrc` si ya se configuró).

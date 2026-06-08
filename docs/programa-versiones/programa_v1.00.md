@@ -19,12 +19,12 @@ BACKEND (Next.js API Routes en Cloudflare Workers)
 ├─ GET  /api/noticias
 ├─ GET  /api/cotizacion
 ├─ GET  /api/historial
-├─ GET  /api/factores
+├─ GET  /api/datos-mercado
 ├─ GET  /api/alertas      POST /api/alertas
 ├─ GET  /api/conversacion
 ├─ POST /api/consulta-agente
 ├─ GET  /api/cron  (llamado por Supabase pg_cron)
-├─ GET  /api/analisis-historico  [PENDIENTE 3.11]
+├─ GET  /api/analisis-historico
 └─ POST /api/auth  GET /api/auth/logout
 
 CRON JOB (Supabase pg_cron - cada 5 min)
@@ -40,6 +40,26 @@ BASE DE DATOS (Supabase PostgreSQL)
 ├─ conversaciones, mensajes
 └─ uso_ia (ledger tokens/costo Claude)
 ```
+
+---
+
+## Estado de la versión v1.00 (orden operativo)
+
+### Pendientes activos (prioridad sugerida)
+1. 8.6 Testing de calidad de clasificación Haiku con noticias frescas.
+2. 10.4.4 Integrar calendario económico (eventos agendados).
+3. 10.4.5 Integrar expectativas de tasas (FedWatch/futuros Fed).
+4. 10.4.6 Crear síntesis diaria de sesión del agente (1x/día).
+5. 11.1-11.6 Sistema de estrategias (diseño, backend, UI y contexto).
+
+### Pendientes diferidos / futuros (no bloquean operación actual)
+- 4.9 Segundo tab de instrumento.
+- 9.3-9.9 Bloque SaaS multi-usuario.
+- 10.3 Segundo instrumento (definición pendiente).
+
+### Consolidaciones de estado (para evitar duplicidad)
+- 3.18 y 10.4.2 representan el mismo avance (VIX activo).
+- 4.11 y 10.5 representan el mismo avance (refresh on-demand activo).
 
 ---
 
@@ -88,14 +108,14 @@ BASE DE DATOS (Supabase PostgreSQL)
 | 3.8  | Crear endpoint GET /api/noticias (con filtros)           | ☑        | YO     |
 | 3.9  | Crear endpoint GET /api/cotizacion                       | ☑        | YO     |
 | 3.10 | Crear endpoint GET /api/datos-mercado (cobre, DXY, tasas)| ☑        | YO     |
-| 3.11 | Crear endpoint GET /api/analisis-historico               | ☐        | YO     |
+| 3.11 | Crear endpoint GET /api/analisis-historico               | ☑        | YO     |
 | 3.12 | Configurar Cron Job (Supabase pg_cron → cada 5 min desde 2026-06-03) | ☑ | TÚ+YO |
 | 3.13 | Guardar noticias, cotización y datos de mercado en BD    | ☑        | YO     |
 | 3.14 | Testing de endpoints y cron (verificar que funciona)     | ☑        | TÚ+YO  |
 | 3.15 | Crear motor de alertas por reglas (cobre, DXY, precio) — integrado al cron| ☑ | YO |
 | 3.16 | Afinar cadencia de feeds críticos → cron 5 min + feed geopolítico Medio Oriente agregado | ☑ | TÚ+YO |
 | 3.17 | Integrar dato de mercado: Petróleo [Tier 2] (Yahoo CL=F) | ☑        | YO     |
-| 3.18 | [Post-MVP] Integrar dato de mercado: VIX [Tier 2]        | ☐        | YO     |
+| 3.18 | [Post-MVP] Integrar dato de mercado: VIX [Tier 2] (consolidado con 10.4.2) | ☑ | YO |
 | 3.19 | Crear cuentas/keys de APIs: Twelve Data ☑ FRED ☑ Banco Central (pendiente correo) | ☑* | TÚ |
 
 ---
@@ -118,7 +138,7 @@ BASE DE DATOS (Supabase PostgreSQL)
 | 4.8  | Responsive (funciona en móvil y desktop)                 | ☑        | YO     |
 | 4.9  | Estructura para segundo tab (otro instrumento, vacío)    | ☐        | YO     |
 | 4.10 | Mostrar alertas en UI (badge/notificación en panel colapsable)| ☑  | YO     |
-| 4.11 | [Post-MVP] Botón "Refresh live" (fetch on-demand de noticias)| ☐   | YO     |
+| 4.11 | [Post-MVP] Botón "Refresh live" (fetch on-demand de noticias, consolidado con 10.5) | ☑ | YO |
 | 4.12 | Gráfico USD/CLP superpuesto con Cobre/DXY/Petróleo + selector de período (1d/1sem/1mes/3mes) ✓| ☑ | YO  |
 | 4.13 | Pines de noticias en el gráfico — versión interina por palabras clave (mejora con IA en Fase 7)| ☑ | YO |
 
@@ -250,13 +270,13 @@ BASE DE DATOS (Supabase PostgreSQL)
 | 10.3  | Segundo tab de instrumento (estructura básica) — DIFERIDO: requiere definir instrumento + su modelo de factores y prompt propio (idea: BTC-CLP) | ⏸️ | YO |
 | 10.4  | **Calidad de señal (auditado 2026-06-03)** — subtareas abajo. Google News es baseline pero con latencia/ruido; falta calendario, fuentes primarias y factores clave | 🔨 | TÚ+YO |
 | 10.4.1 | Podar Google News (de 5→2 locales) + agregar **Financial Juice** (squawk RT) y **Fed RSS** (primaria) ✓ verificadas | ☑ | YO |
-| 10.4.2 | **Activar VIX** (Stooq `vi.f`, migración 0008) — risk-on/off Tier 2, en contexto del agente | ☑ | YO |
+| 10.4.2 | **Activar VIX** (Stooq `vi.f`, migración 0008) — risk-on/off Tier 2, en contexto del agente (consolidado en 3.18) | ☑ | YO |
 | 10.4.3 | **BCCh**: comunicados RPM + calendario de reuniones 2026 (8 fechas) ✓. BCCh no tiene RSS → comunicado/decisión vía Google News acotado (fuente nueva, migración 0009, pipeline Haiku). Calendario = constante tipada `app/lib/calendario.ts` (8 RPM, marca IPoM), inyectado al contexto del agente + briefing para anticipar el catalizador del diferencial de tasas | ☑ | YO |
 | 10.4.4 | **🗓️ Calendario económico** (Finnhub/ForexFactory JSON): catalizadores agendados (NFP/CPI/FOMC/IPC Chile/TPM) → agente anticipatorio | ☐ | TÚ+YO |
 | 10.4.5 | Expectativas de tasas (CME FedWatch / futuros Fed) — dirección del diferencial | ☐ | YO |
 | 10.4.6 | **Síntesis de sesión** del agente (1×/día, Sonnet): lectura coherente de factores+noticias del día | ☐ | YO |
 | 10.4.7 | UI: etiquetar precios como "referencia · puede diferir del bróker" (honestidad vs gap MetaTrader) ✓ | ☑ | YO |
-| 10.5  | Botón Refresh on-demand de noticias (ya existía; + clasificación Haiku en el refresh) | ☑ | YO |
+| 10.5  | Botón Refresh on-demand de noticias (ya existía; + clasificación Haiku en el refresh, consolidado en 4.11) | ☑ | YO |
 | 10.6  | TPM real → **RESUELTO con mindicador.cl** (no se necesitó el BCCh)   | ☑        | YO     |
 | 10.7  | **[Robustez A] Indicador de frescura por factor** ✓: punto verde/ámbar + "hace X" por factor; frescura relativa al latido USD/CLP (⚠️ si una fuente se congela mientras las demás siguen); "mercado cerrado" si el latido está viejo. Caza fallos silenciosos como el de Yahoo/cobre | ☑ | YO |
 | 10.8  | **[Robustez C] Visibilidad del cron**: tabla `cron_runs` (migración 0007) registra cada corrida (duración, ok, errores por paso) + indicador en header (punto verde/ámbar/rojo con detalle). Surface fallos silenciosos en vez de perderlos en logs | ☑ | YO |
