@@ -2,6 +2,7 @@ import Anthropic from '@anthropic-ai/sdk'
 import { anthropic, MODELOS, registrarUso } from './anthropic'
 import { supabaseAdmin } from './supabase'
 import { contextoCalendarioCompleto } from './calendario'
+import { getFactoresPanel } from './factores'
 
 // Versión del prompt — sirve para versionar y comparar calidad si lo cambiamos.
 export const PROMPT_VERSION = 'v1'
@@ -120,23 +121,64 @@ async function contextoExpectativasDiferencial(): Promise<string> {
 
 // ── Construye el snapshot de mercado + noticias recientes para el contexto ──
 async function construirContexto(): Promise<string> {
-  // Últimos valores de cada serie Tier 1
-  const { data: series } = await supabaseAdmin
+  // Snapshot de factores: valor + dirección JUNTOS, una sola vez. Los Tier 1
+  // (cobre, DXY, diferencial) traen señal calculada con la MISMA lógica del panel
+  // y el gráfico (movimiento de la sesión actual), para que el agente no tenga que
+  // adivinar la dirección. El resto (USDCLP, petróleo, VIX, TPM, FED) va como valor
+  // crudo de referencia. Así el agente ve la coyuntura del día y el dato puntual.
+  const formatoNum = (v: number | null, unidad: string | null) =>
+    v === null ? 'sin dato' : `${v.toLocaleString('es-CL', { maximumFractionDigits: 3 })}${unidad ? ' ' + unidad : ''}`
+
+  let lineasFactores: string[] = []
+  let lecturaTier1 = ''
+  try {
+    const { factores: panel, mercadoActivo } = await getFactoresPanel()
+
+    const lineaTier1 = (codigo: string, etiqueta: string) => {
+      const f = panel.find((x) => x.codigo === codigo || (codigo === 'DIFERENCIAL' && x.esDiferencial))
+      if (!f) return `- ${etiqueta}: sin dato`
+      const val = f.esDiferencial
+        ? `${f.valor !== null && f.valor >= 0 ? '+' : ''}${f.valor?.toFixed(2) ?? '—'} pp`
+        : formatoNum(f.valor, f.unidad)
+      if (f.senal === null) return `- ${etiqueta}: ${val}`
+      const movim = f.var1d !== null ? `, ${f.var1d >= 0 ? '+' : ''}${f.var1d.toFixed(2)}% en el día` : ''
+      return `- ${etiqueta}: ${val} → empuja a PESO ${f.senal === 'fuerte' ? 'FUERTE' : 'DÉBIL'}${movim}`
+    }
+
+    lineasFactores.push(
+      lineaTier1('COBRE', 'Cobre [Tier 1]'),
+      lineaTier1('DXY', 'DXY / dólar global [Tier 1]'),
+      lineaTier1('DIFERENCIAL', 'Diferencial de tasas TPM-Fed [Tier 1]'),
+    )
+
+    const fuertes = panel.filter((f) => f.senal === 'fuerte').length
+    const debiles = panel.filter((f) => f.senal === 'debil').length
+    if (!mercadoActivo) lecturaTier1 = 'Mercado cerrado/quieto (latido USD/CLP viejo): la señal puede no reflejar movimiento en vivo.'
+    else if (fuertes >= 2 && debiles === 0) lecturaTier1 = 'Tier 1 alineados a PESO FUERTE → sesgo SHORT USD/CLP.'
+    else if (debiles >= 2 && fuertes === 0) lecturaTier1 = 'Tier 1 alineados a PESO DÉBIL → sesgo LONG USD/CLP.'
+    else lecturaTier1 = 'Tier 1 sin alineación clara (señal mixta → poca convicción).'
+  } catch (err) {
+    console.error('Agente: error obteniendo señal de factores:', err)
+  }
+
+  // Valores de referencia (sin señal direccional propia): el precio del par y los
+  // factores Tier 2. Solo se incluyen los que el panel Tier 1 no cubre.
+  const { data: seriesRef } = await supabaseAdmin
     .from('series')
     .select('id, codigo, nombre, unidad')
     .eq('activo', true)
-    .in('codigo', ['USDCLP', 'COBRE', 'DXY', 'TPM', 'FED', 'PETROLEO', 'VIX'])
+    .in('codigo', ['USDCLP', 'PETROLEO', 'VIX'])
 
-  const factores = await Promise.all(
-    (series ?? []).map(async (s) => {
+  const lineasRef = await Promise.all(
+    (seriesRef ?? []).map(async (s) => {
       const { data } = await supabaseAdmin
         .from('datos_mercado')
-        .select('valor, fecha_dato')
+        .select('valor')
         .eq('serie_id', s.id)
         .order('fecha_dato', { ascending: false })
         .limit(1)
         .single()
-      return `- ${s.nombre} (${s.codigo}): ${data?.valor ?? 'sin dato'}${s.unidad ? ' ' + s.unidad : ''}`
+      return `- ${s.nombre} (${s.codigo}): ${formatoNum(data?.valor ?? null, s.unidad)}`
     })
   )
 
@@ -156,8 +198,12 @@ async function construirContexto(): Promise<string> {
   const ahora = new Date().toISOString()
   return `## Contexto de mercado (al ${ahora})
 
-### Datos de mercado (último valor)
-${factores.length ? factores.join('\n') : 'Sin datos de mercado disponibles.'}
+### Factores Tier 1 (valor + dirección — coincide con el panel y el gráfico que ve el usuario)
+${lineasFactores.length ? lineasFactores.join('\n') : 'Sin señal calculada disponible.'}
+${lecturaTier1 ? `\nLectura: ${lecturaTier1}` : ''}
+
+### Otros datos de mercado (referencia)
+${lineasRef.length ? lineasRef.join('\n') : 'Sin datos de mercado disponibles.'}
 
 ### Diferencial de tasas TPM-FED (tendencia 30 días)
 ${diferencialCtx || 'Sin datos de diferencial disponibles.'}

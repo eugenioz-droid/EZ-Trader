@@ -36,16 +36,23 @@ const HEARTBEAT_QUIETO_MS = 30 * 60 * 1000 // si el latido mismo está viejo →
 const REZAGO_DIARIO_MS = 3 * DIA_MS // series diarias (TPM/FED): rezagada si >3 días sin dato
 
 // Valor más reciente en o antes de un instante dado (para comparar ventanas).
-async function valorEnOAntes(serieId: number, instante: number): Promise<number | null> {
+// Devuelve también la fecha del punto encontrado: con mercado cerrado (fin de
+// semana) el punto "más cercano" puede ser de varios días atrás, y eso cambia
+// el significado de la variación. Quien llame decide si la tolera o la marca.
+async function valorEnOAntes(
+  serieId: number,
+  instante: number,
+): Promise<{ valor: number; fechaMs: number } | null> {
   const { data } = await supabaseAdmin
     .from('datos_mercado')
-    .select('valor')
+    .select('valor, fecha_dato')
     .eq('serie_id', serieId)
     .lte('fecha_dato', new Date(instante).toISOString())
     .order('fecha_dato', { ascending: false })
     .limit(1)
     .single()
-  return data?.valor ?? null
+  if (!data) return null
+  return { valor: data.valor, fechaMs: new Date(data.fecha_dato).getTime() }
 }
 
 function variacionPct(actual: number | null, pasado: number | null): number | null {
@@ -64,6 +71,17 @@ function calcularSenal(codigo: string, tendencia: number | null): 'fuerte' | 'de
   return cfg.sube_peso === 'fuerte' ? 'debil' : 'fuerte'
 }
 
+// Primer valor de la última jornada con datos (la "apertura" de la sesión vigente).
+// Toma el día calendario UTC del punto más reciente y devuelve el primer valor de
+// ese día. Si la serie viene de un gap (ej. lunes tras fin de semana), la sesión es
+// la del lunes, no la del viernes → la variación refleja el movimiento de hoy.
+function primerPuntoUltimaSesion(puntos: { valor: number; fecha_dato: string }[]): number | null {
+  if (puntos.length === 0) return null
+  const ultimoDia = puntos[puntos.length - 1].fecha_dato.slice(0, 10) // YYYY-MM-DD (UTC)
+  const deHoy = puntos.filter((p) => p.fecha_dato.slice(0, 10) === ultimoDia)
+  return deHoy.length ? deHoy[0].valor : puntos[puntos.length - 1].valor
+}
+
 export async function getFactoresDetalle(codigos: string[]): Promise<FactorDato[]> {
   const { data: series } = await supabaseAdmin
     .from('series')
@@ -77,18 +95,20 @@ export async function getFactoresDetalle(codigos: string[]): Promise<FactorDato[
 
   return Promise.all(
     series.map(async (s) => {
-      // Último valor
-      const { data: ultimo } = await supabaseAdmin
+      // Últimos 2 puntos: el actual y el cierre inmediatamente anterior.
+      const { data: ultimos } = await supabaseAdmin
         .from('datos_mercado')
         .select('valor, fecha_dato')
         .eq('serie_id', s.id)
         .order('fecha_dato', { ascending: false })
-        .limit(1)
-        .single()
+        .limit(2)
 
+      const ultimo = ultimos?.[0]
       const valor = ultimo?.valor ?? null
 
-      // Ventanas de comparación
+      // Ventanas de comparación de respaldo (~1d y ~7d). Pueden caer en un gap
+      // de fin de semana y traer un punto más viejo; por eso guardamos su fecha.
+      // sparkRows trae todos los puntos de los últimos 7d (ascendente).
       const [hace1d, hace1sem, sparkRows] = await Promise.all([
         valorEnOAntes(s.id, ahora - DIA_MS),
         valorEnOAntes(s.id, ahora - 7 * DIA_MS),
@@ -100,16 +120,34 @@ export async function getFactoresDetalle(codigos: string[]): Promise<FactorDato[
           .order('fecha_dato', { ascending: true }),
       ])
 
-      const var1d = variacionPct(valor, hace1d)
-      const var1sem = variacionPct(valor, hace1sem)
+      // var1d/var1sem solo si el punto de referencia está dentro de una tolerancia
+      // de su ventana. Con el gap de fin de semana, "hace 1d" puede traer un punto
+      // de hace 3-4 días: en ese caso NO mostramos un "1d" que mentiría (queda null).
+      const TOL_1D = 1.5 * DIA_MS // acepta hasta 1.5 días de antigüedad para "1d"
+      const TOL_1SEM = 9 * DIA_MS // acepta hasta 9 días para "1 semana"
+      const ref1dOk = hace1d !== null && Math.abs(ahora - DIA_MS - hace1d.fechaMs) <= TOL_1D
+      const ref1semOk = hace1sem !== null && Math.abs(ahora - 7 * DIA_MS - hace1sem.fechaMs) <= TOL_1SEM
+      const var1d = ref1dOk ? variacionPct(valor, hace1d!.valor) : null
+      const var1sem = ref1semOk ? variacionPct(valor, hace1sem!.valor) : null
+
+      // Movimiento MÁS RECIENTE = cómo va la sesión actual: valor de ahora vs el
+      // primer punto de la última jornada con datos. Es lo que ve el usuario en
+      // el gráfico ("hoy el dólar bajó"), no depende de "hace exactamente 24h"
+      // (se distorsiona con el gap de fin de semana) ni del micro-tick de 5 min
+      // (parpadearía). Define la sesión como los puntos del último día calendario
+      // con datos.
+      const puntos = sparkRows.data ?? []
+      const aperturaSesion = primerPuntoUltimaSesion(puntos)
+      const varReciente = variacionPct(valor, aperturaSesion)
 
       // Sparkline: downsample a ~24 puntos
-      const todos = (sparkRows.data ?? []).map((r) => r.valor)
+      const todos = puntos.map((r) => r.valor)
       const paso = Math.max(1, Math.ceil(todos.length / 24))
       const sparkline = todos.filter((_, i) => i % paso === 0)
 
-      // Señal: usa la tendencia semanal si existe, si no la diaria
-      const tendencia = var1sem ?? var1d
+      // Señal: prioriza el movimiento más reciente (lo que el usuario ve). Si no
+      // hay un punto previo (serie con 1 solo dato), cae a 1d y luego a 7d.
+      const tendencia = varReciente ?? var1d ?? var1sem
       const senal = calcularSenal(s.codigo, tendencia)
 
       return {
