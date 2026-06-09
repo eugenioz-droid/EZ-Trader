@@ -118,7 +118,11 @@ async function llamarHaiku(noticias: NoticiaInput[]): Promise<{ items: Clasifica
 
   const resp = await anthropic.messages.create({
     model: MODELOS.clasificacion,
-    max_tokens: 1000,
+    // v2 produce respuestas grandes: cada noticia trae secciones[] (objetos
+    // anidados) + geografia + relevancia, además de la clasificación USD/CLP.
+    // Con 1000 tokens y 15 noticias el JSON se truncaba a la mitad → parse fallaba
+    // → 0 clasificadas (bug del backfill v2). ~150 tok/noticia × 15 ≈ 2250 + margen.
+    max_tokens: 3000,
     system: [
       {
         type: 'text',
@@ -137,10 +141,46 @@ async function llamarHaiku(noticias: NoticiaInput[]): Promise<{ items: Clasifica
     const match = texto.match(/\[[\s\S]*\]/)
     if (match) items = JSON.parse(match[0])
   } catch {
-    console.error('Clasificador: error parseando JSON de Haiku:', texto.slice(0, 200))
+    // Si el array completo no parsea (p.ej. respuesta truncada por max_tokens),
+    // rescatamos los objetos individuales que SÍ estén completos en vez de perder
+    // el batch entero. Cada objeto debe tener un "id" para ser válido.
+    items = rescatarObjetos(texto)
+    if (items.length === 0) {
+      console.error('Clasificador: error parseando JSON de Haiku:', texto.slice(-200))
+    } else {
+      console.warn(`Clasificador: JSON parcial, rescatados ${items.length} objetos`)
+    }
   }
 
   return { items, uso: resp.usage }
+}
+
+// Rescata objetos JSON completos de un texto posiblemente truncado. Recorre llave
+// por llave equilibrando { } y parsea cada bloque cerrado. Tolera que el último
+// objeto quede a medias (se descarta).
+function rescatarObjetos(texto: string): ClasificacionItem[] {
+  const items: ClasificacionItem[] = []
+  let nivel = 0
+  let inicio = -1
+  for (let i = 0; i < texto.length; i++) {
+    const c = texto[i]
+    if (c === '{') {
+      if (nivel === 0) inicio = i
+      nivel++
+    } else if (c === '}') {
+      nivel--
+      if (nivel === 0 && inicio >= 0) {
+        try {
+          const obj = JSON.parse(texto.slice(inicio, i + 1))
+          if (obj && typeof obj.id === 'number') items.push(obj)
+        } catch {
+          // objeto inválido, se ignora
+        }
+        inicio = -1
+      }
+    }
+  }
+  return items
 }
 
 // Obtiene los IDs de series y factores para los FK en analisis_ia.
