@@ -119,6 +119,43 @@ async function contextoExpectativasDiferencial(): Promise<string> {
   ].join('\n')
 }
 
+// Noticias para el contexto del agente USD/CLP: prioriza las que tocan la sección
+// 'dolar' (etiquetadas por Haiku v2). Completa con las más recientes si faltan,
+// para no dejar al agente sin noticias antes del backfill. Devuelve líneas formateadas.
+async function obtenerNoticiasAgente(limite = 15): Promise<string[]> {
+  const fmt = (n: { titulo: string; fuentes: unknown }) => {
+    const fuente = (n.fuentes as { nombre?: string } | null)?.nombre ?? 'fuente'
+    return `- [${fuente}] ${n.titulo}`
+  }
+
+  // 1) Noticias etiquetadas con sección 'dolar' (join con analisis_ia).
+  const { data: dolar } = await supabaseAdmin
+    .from('noticias')
+    .select('id, titulo, publicado_at, fuentes ( nombre ), analisis_ia!inner ( secciones_lista )')
+    .contains('analisis_ia.secciones_lista', ['dolar'])
+    .order('publicado_at', { ascending: false })
+    .limit(limite)
+
+  const lineas = (dolar ?? []).map(fmt)
+  const idsUsados = new Set((dolar ?? []).map((n) => n.id))
+
+  // 2) Si faltan, completar con las más recientes (sin repetir).
+  if (lineas.length < limite) {
+    const { data: recientes } = await supabaseAdmin
+      .from('noticias')
+      .select('id, titulo, publicado_at, fuentes ( nombre )')
+      .order('publicado_at', { ascending: false })
+      .limit(limite * 2)
+    for (const n of recientes ?? []) {
+      if (lineas.length >= limite) break
+      if (idsUsados.has(n.id)) continue
+      lineas.push(fmt(n))
+    }
+  }
+
+  return lineas
+}
+
 // ── Construye el snapshot de mercado + noticias recientes para el contexto ──
 async function construirContexto(): Promise<string> {
   // Snapshot de factores: valor + dirección JUNTOS, una sola vez. Los Tier 1
@@ -182,17 +219,12 @@ async function construirContexto(): Promise<string> {
     })
   )
 
-  // Noticias recientes
-  const { data: noticias } = await supabaseAdmin
-    .from('noticias')
-    .select('titulo, resumen, publicado_at, fuentes ( nombre )')
-    .order('publicado_at', { ascending: false })
-    .limit(15)
-
-  const lineasNoticias = (noticias ?? []).map((n) => {
-    const fuente = (n.fuentes as { nombre?: string } | null)?.nombre ?? 'fuente'
-    return `- [${fuente}] ${n.titulo}`
-  })
+  // Noticias recientes — ENFOCADAS en el dólar. A medida que el hub crece (cripto,
+  // IPSA, oro), las "15 más recientes" sin filtrar diluirían el foco USD/CLP. Por eso
+  // priorizamos las que Haiku etiquetó con la sección 'dolar' (o factor que mueve el
+  // par). Si aún no hay suficientes etiquetadas (p.ej. antes del backfill v2),
+  // completamos con las más recientes como respaldo.
+  const lineasNoticias = await obtenerNoticiasAgente()
 
   const diferencialCtx = await contextoExpectativasDiferencial()
   const ahora = new Date().toISOString()

@@ -15,7 +15,12 @@ const DIRECCION_LABEL: Record<string, string> = {
 }
 
 // Versión del prompt. Al cambiarla, todas las noticias quedan re-elegibles.
-const PROMPT_VERSION = 'v1'
+// v2: agrega etiquetas del hub público (secciones_impacto, geografia, relevancia)
+// además de la clasificación USD/CLP existente (impacto/factor/direccion).
+const PROMPT_VERSION = 'v2'
+
+// Secciones válidas del hub (deben coincidir con la tabla `secciones`).
+const SECCIONES_VALIDAS = ['dolar', 'cobre', 'bitcoin', 'sp500', 'ipsa', 'oro', 'uf-inflacion'] as const
 
 // Máximo de noticias a clasificar por llamada al cron (control de costo).
 // Con Haiku: ~15 noticias ≈ $0.003 por batch. Con ~50 noticias nuevas/día → ~$0.01/día.
@@ -23,25 +28,39 @@ const MAX_POR_BATCH = 15
 
 // System prompt estable → se cachea con prompt caching después del primer uso.
 // Describe el contexto de trading y los factores/impactos posibles.
-const SYSTEM_PROMPT = `Eres un clasificador de noticias para un sistema de análisis de trading de CFDs USD/CLP.
+const SYSTEM_PROMPT = `Eres un clasificador de noticias económicas para un hub público chileno. El hub tiene secciones por instrumento y, además, una capa de trading USD/CLP.
 
-Tu tarea es analizar cada noticia y determinar:
+Para cada noticia determina:
+
+— CLASIFICACIÓN USD/CLP (para la capa de trading del dólar) —
 1. IMPACTO sobre USD/CLP: "alto" (mueve el par significativamente), "medio" (influye pero no es dominante), "bajo" (ruido o poco relevante)
-2. FACTOR principal afectado (usa exactamente uno de estos códigos):
-   A1=Cobre, A2=DXY/Dólar global, A3=Tasas/carry, A4=Petróleo, A5=VIX/miedo, B1=China, B2=Fed/FOMC/macro EEUU, B3=Geopolítica, B4=BCCh/intervención, B5=Política Chile/AFP, B6=IPC Chile, NINGUNO=no relevante
+2. FACTOR principal (un código): A1=Cobre, A2=DXY/Dólar global, A3=Tasas/carry, A4=Petróleo, A5=VIX/miedo, B1=China, B2=Fed/FOMC/macro EEUU, B3=Geopolítica, B4=BCCh/intervención, B5=Política Chile/AFP, B6=IPC Chile, NINGUNO=no relevante
 3. DIRECCIÓN sobre USD/CLP: "sube" (peso débil), "baja" (peso fuerte), "neutral"
 4. RESUMEN en 1 oración en español (máx. 15 palabras)
-5. CONFIANZA: número entre 0.0 y 1.0
+5. CONFIANZA: número 0.0–1.0
 
-Responde SOLO con un array JSON, sin explicaciones. Cada elemento tiene exactamente estas claves: id, impacto, factor, direccion, resumen, confianza.
+— ETIQUETAS DEL HUB (para la portada pública y las páginas por sección) —
+6. SECCIONES: lista de las secciones que la noticia afecta, cada una con su PROPIO impacto y dirección EN ESA SECCIÓN. Secciones válidas: dolar, cobre, bitcoin, sp500, ipsa, oro, uf-inflacion. Una noticia puede tocar varias (ej. "Fed sube tasas" afecta dolar y sp500). Si es una noticia general sin instrumento claro, deja la lista vacía [].
+   - impacto por sección: "alto" | "medio" | "bajo"
+   - direccion por sección: "sube" | "baja" | "neutral" (qué le pasa al PRECIO de esa sección)
+7. GEOGRAFIA: "nacional" (Chile), "internacional" (global), o "ambas".
+8. RELEVANCIA: número 0.0–1.0 de qué tan destacable es para CUALQUIER lector del hub, independiente de una divisa. Una noticia puede ser bajo impacto para USD/CLP pero muy relevante para el público (ej. Bitcoin en máximo histórico → relevancia alta). Ordena la portada.
+
+Responde SOLO con un array JSON, sin explicaciones. Cada elemento tiene exactamente estas claves: id, impacto, factor, direccion, resumen, confianza, secciones, geografia, relevancia. Donde "secciones" es un array de objetos {seccion, impacto, direccion}.
 
 Ejemplo:
-[{"id":1,"impacto":"alto","factor":"A1","direccion":"baja","resumen":"China anuncia estímulo masivo que impulsa demanda de cobre.","confianza":0.9}]`
+[{"id":1,"impacto":"alto","factor":"A1","direccion":"baja","resumen":"China anuncia estímulo que impulsa demanda de cobre.","confianza":0.9,"secciones":[{"seccion":"cobre","impacto":"alto","direccion":"sube"},{"seccion":"dolar","impacto":"medio","direccion":"baja"}],"geografia":"internacional","relevancia":0.8}]`
 
 interface NoticiaInput {
   id: number
   titulo: string
   resumen: string | null
+}
+
+interface SeccionImpacto {
+  seccion: string
+  impacto: 'alto' | 'medio' | 'bajo'
+  direccion: 'sube' | 'baja' | 'neutral'
 }
 
 interface ClasificacionItem {
@@ -51,6 +70,44 @@ interface ClasificacionItem {
   direccion: 'sube' | 'baja' | 'neutral'
   resumen: string
   confianza: number
+  // Etiquetas del hub (PROMPT_VERSION v2). Opcionales por robustez: si Haiku no
+  // las devuelve en alguna respuesta, la noticia se guarda igual sin etiquetas.
+  secciones?: SeccionImpacto[]
+  geografia?: 'nacional' | 'internacional' | 'ambas'
+  relevancia?: number
+}
+
+// Normaliza y valida las etiquetas del hub que vienen de Haiku. Descarta secciones
+// inválidas y acota valores fuera de rango: nunca confiar ciegamente en el LLM.
+function normalizarEtiquetas(item: ClasificacionItem): {
+  secciones_impacto: SeccionImpacto[]
+  secciones_lista: string[]
+  geografia: string | null
+  relevancia: number | null
+} {
+  const impactosOk = ['alto', 'medio', 'bajo']
+  const direccionesOk = ['sube', 'baja', 'neutral']
+  const secciones = Array.isArray(item.secciones)
+    ? item.secciones.filter(
+        (s) =>
+          s &&
+          SECCIONES_VALIDAS.includes(s.seccion as (typeof SECCIONES_VALIDAS)[number]) &&
+          impactosOk.includes(s.impacto) &&
+          direccionesOk.includes(s.direccion),
+      )
+    : []
+  const geografia =
+    item.geografia && ['nacional', 'internacional', 'ambas'].includes(item.geografia)
+      ? item.geografia
+      : null
+  const relevancia =
+    typeof item.relevancia === 'number' ? Math.min(1, Math.max(0, item.relevancia)) : null
+  return {
+    secciones_impacto: secciones,
+    secciones_lista: secciones.map((s) => s.seccion),
+    geografia,
+    relevancia,
+  }
 }
 
 // Llama a Haiku con un batch de noticias y retorna las clasificaciones.
@@ -195,19 +252,27 @@ export async function clasificarNoticiasNuevas(): Promise<number> {
         const validos = ['alto', 'medio', 'bajo']
         return validos.includes(item.impacto)
       })
-      .map((item) => ({
-        noticia_id: item.id,
-        instrumento_id: instrumentoId,
-        factor_id: factorMap.get(item.factor) ?? null,
-        impacto: item.impacto as 'alto' | 'medio' | 'bajo',
-        direccion_estimada: (['sube', 'baja', 'neutral'].includes(item.direccion)
-          ? item.direccion
-          : 'neutral') as 'sube' | 'baja' | 'neutral',
-        resumen_ia: item.resumen?.slice(0, 300) ?? null,
-        confianza: typeof item.confianza === 'number' ? Math.min(1, Math.max(0, item.confianza)) : null,
-        modelo_usado: MODELOS.clasificacion,
-        prompt_version: PROMPT_VERSION,
-      }))
+      .map((item) => {
+        const etiquetas = normalizarEtiquetas(item)
+        return {
+          noticia_id: item.id,
+          instrumento_id: instrumentoId,
+          factor_id: factorMap.get(item.factor) ?? null,
+          impacto: item.impacto as 'alto' | 'medio' | 'bajo',
+          direccion_estimada: (['sube', 'baja', 'neutral'].includes(item.direccion)
+            ? item.direccion
+            : 'neutral') as 'sube' | 'baja' | 'neutral',
+          resumen_ia: item.resumen?.slice(0, 300) ?? null,
+          confianza: typeof item.confianza === 'number' ? Math.min(1, Math.max(0, item.confianza)) : null,
+          modelo_usado: MODELOS.clasificacion,
+          prompt_version: PROMPT_VERSION,
+          // Etiquetas del hub (v2)
+          secciones_impacto: etiquetas.secciones_impacto,
+          secciones_lista: etiquetas.secciones_lista,
+          geografia: etiquetas.geografia,
+          relevancia: etiquetas.relevancia,
+        }
+      })
 
     if (rows.length > 0) {
       const { error } = await supabaseAdmin
