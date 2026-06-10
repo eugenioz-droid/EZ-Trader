@@ -113,10 +113,10 @@ PIPELINE (cron v1.00 — se extiende)
 
 | N°  | Descripción | Realizado | Quién |
 |-----|-------------|-----------|-------|
-| 2.1 | Ampliar feeds nacionales (Diario Financiero, Emol Economía, La Tercera/Pulso) | ☐ | TÚ+YO |
-| 2.2 | Ampliar feeds internacionales (macro global, cripto, commodities) | ☐ | TÚ+YO |
-| 2.3 | Confirmar set inicial de secciones (dólar, cobre, BTC, S&P 500, IPSA, oro, UF/inflación) | ☐ | TÚ+YO |
-| 2.4 | Datos de mercado para cada sección nueva: S&P 500, IPSA, oro, UF (gráfico + factores) | ☐ | YO |
+| 2.1 | Ampliar feeds nacionales: **Cooperativa Economía** + **La Tercera/Pulso** (Emol/DF/BioBío fallaron desde red local; reevaluar). Migración 0013 | ☑ | TÚ+YO |
+| 2.2 | Ampliar feeds internacionales: **CoinTelegraph ES** (cripto), **CNBC Markets** (sp500), **Investing Commodities** (oro). CoinTelegraph a validar en Workers | ☑ | TÚ+YO |
+| 2.3 | Confirmar set inicial de secciones (dólar, cobre, BTC, S&P 500, IPSA, oro, UF/inflación) — definido en taxonomía 1.1 | ☑ | TÚ+YO |
+| 2.4 | Datos de mercado para cada sección nueva: S&P 500, IPSA, oro, UF (gráfico + factores) — PENDIENTE | ☐ | YO |
 | 2.5 | Ponderación por difusión/credibilidad del medio (señal pre-IA, era 9.9) → alimenta score | ☐ | YO |
 
 ---
@@ -127,13 +127,13 @@ PIPELINE (cron v1.00 — se extiende)
 
 | N°  | Descripción | Realizado | Quién |
 |-----|-------------|-----------|-------|
-| 3.1 | Rediseño de layout: separar shell público del shell "pro" (`/app`) | ☐ | YO |
-| 3.2 | **Portada curada**: "lo más importante hoy" + síntesis diaria pública + grilla de destacadas | ☐ | YO |
-| 3.3 | Barra de filtros por etiqueta (sección / nacional-internacional / factor) — el "a tu pinta" | ☐ | YO |
-| 3.4 | Página por sección `/[seccion]`: gráfico + factores + noticias de esa sección | ☐ | YO |
-| 3.5 | Página de detalle `/noticia/[slug]`: noticia + clasificación + relacionadas (SEO) | ☐ | YO |
+| 3.1 | Hub público en `/hub` (sin login, aditivo). Separar a `/app` queda PENDIENTE (mueve la app actual — requiere revisión del dueño) | 🔨 | YO |
+| 3.2 | **Portada curada** `/hub`: síntesis del día + grilla de destacadas (relevancia≥0.6, principal grande) + lo más reciente | ☑ | YO |
+| 3.3 | Barra de filtros por etiqueta (sección/geografía/factor) — nav por sección lista; filtros finos PENDIENTE | 🔨 | YO |
+| 3.4 | Página por sección `/hub/seccion/[codigo]`: noticias filtradas + descripción. Gráfico+factores PENDIENTE (depende de 2.4) | 🔨 | YO |
+| 3.5 | Página de detalle `/hub/noticia/[slug]`: noticia + secciones_impacto + relacionadas + OG tags | ☑ | YO |
 | 3.6 | Página por factor/tema `/tema/[factor]` | ☐ | YO |
-| 3.7 | Responsive + rendimiento (Core Web Vitals — importa para SEO y ads) | ☐ | YO |
+| 3.7 | Responsive + rendimiento (Core Web Vitals) — grids responsive hechos; medir CWV PENDIENTE | 🔨 | YO |
 
 ---
 
