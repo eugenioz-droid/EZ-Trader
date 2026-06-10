@@ -101,8 +101,8 @@ PIPELINE (cron v1.00 — se extiende)
 | 1.2 | Migración 0011: tabla `secciones` + `noticias.slug` + `analisis_ia` (secciones_impacto jsonb, secciones_lista, geografia, relevancia) | ☑ | YO |
 | 1.3 | Extender prompt Haiku (v2): + secciones_impacto (impacto+dir POR sección) + geografía + relevancia 0–1. Agente USD/CLP filtra noticias a sección 'dolar' (con fallback) para no diluir su foco al crecer el hub | ☑ | YO |
 | 1.4 | Backfill: re-clasificar noticias con v2. ✅ Validado en prod (etiquetas pobladas OK). Bug resuelto en el camino: max_tokens 1000 truncaba el JSON v2 → 0 clasificadas. Bonus: fix de duplicados (URL con params de tracking) + migración 0012 grants | ☑ | TÚ+YO |
-| 1.5 | Generar `slug` único por noticia (URLs `/noticia/[slug]`) | ☐ | YO |
-| 1.6 | Endpoint público `GET /api/feed` (filtros: sección, geografía, factor, destacadas) | ☐ | YO |
+| 1.5 | Generar `slug` único por noticia (URLs `/noticia/[slug]`). generarSlug() kebab-case + sufijo hash de URL (único, SEO). Aplicado al guardar + backfill 2821/2821 | ☑ | YO |
+| 1.6 | Endpoint público `GET /api/feed` (filtros: sección, geografía, destacadas). Probado contra prod: filtros OK, secciones múltiples, orden por relevancia | ☑ | YO |
 | 1.7 | Testing de calidad de clasificación Haiku con noticias frescas (era 8.6, ahora crítico) | ☐ | TÚ |
 
 ---

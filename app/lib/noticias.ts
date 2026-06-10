@@ -73,6 +73,31 @@ export interface NoticiaRaw {
 // → el UNIQUE por URL los trataba como distintos y duplicaba (61% de duplicados).
 const PARAMS_TRACKING = ['xy', 'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'fbclid', 'gclid']
 
+// Genera un slug SEO-friendly y único para la URL pública /noticia/[slug].
+// Formato: titulo-en-kebab-case-<sufijo>. El sufijo es un hash corto y determinista
+// de la URL canónica → garantiza unicidad (dos noticias con título igual no chocan)
+// y es estable (re-calcularlo da el mismo slug). Se calcula ANTES del insert (no
+// depende del id, que aún no existe).
+function generarSlug(titulo: string, urlCanonica: string): string {
+  const base = titulo
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '') // quita marcas diacríticas (acentos)
+    .replace(/[^a-z0-9\s-]/g, '')    // solo alfanumérico, espacios y guiones
+    .trim()
+    .replace(/\s+/g, '-')
+    .replace(/-+/g, '-')
+    .slice(0, 70)                    // acota el largo
+    .replace(/-+$/, '')              // sin guion final tras el corte
+
+  // Hash corto (djb2) de la URL → base36, 6 chars. Suficiente para unicidad práctica.
+  let h = 5381
+  for (let i = 0; i < urlCanonica.length; i++) h = ((h << 5) + h + urlCanonica.charCodeAt(i)) >>> 0
+  const sufijo = h.toString(36).slice(0, 6)
+
+  return base ? `${base}-${sufijo}` : sufijo
+}
+
 // Canoniza la URL para dedup: quita params de tracking y la barra final.
 // Si la URL no parsea, la devuelve recortada (mejor algo que romper).
 function normalizarUrl(url: string): string {
@@ -164,6 +189,7 @@ export async function guardarNoticias(noticias: NoticiaRaw[]): Promise<number> {
     titulo: n.titulo,
     resumen: n.resumen,
     url: n.url,
+    slug: generarSlug(n.titulo, n.url),
     publicado_at: n.publicado_at,
     fuente_id: fuenteMap.get(n.fuente_nombre) ?? null,
     instrumento_id: instrumento?.id ?? null,
