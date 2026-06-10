@@ -6,6 +6,12 @@ const RUTAS_PUBLICAS = [
   '/login',
   '/api/auth',
   '/api/cron',
+  // Hub público (Fase 3, v2.00): portada + secciones + detalle de noticia.
+  // Sin login. La app de trading sigue protegida en / hasta que se decida
+  // mover a /app (cambio de UX que requiere revisión del dueño).
+  '/hub',
+  '/api/feed',
+  '/api/sintesis',
 ]
 
 export function middleware(req: NextRequest) {
