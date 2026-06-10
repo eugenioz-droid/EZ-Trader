@@ -68,6 +68,28 @@ export interface NoticiaRaw {
   idioma: string
 }
 
+// Params de tracking que NO cambian el artículo: la misma noticia llega con
+// distinto valor (ej. Financial Juice sirve ?xy=rss y ?xy=1 para el mismo link)
+// → el UNIQUE por URL los trataba como distintos y duplicaba (61% de duplicados).
+const PARAMS_TRACKING = ['xy', 'utm_source', 'utm_medium', 'utm_campaign', 'utm_term', 'utm_content', 'fbclid', 'gclid']
+
+// Canoniza la URL para dedup: quita params de tracking y la barra final.
+// Si la URL no parsea, la devuelve recortada (mejor algo que romper).
+function normalizarUrl(url: string): string {
+  const limpia = url.trim()
+  try {
+    const u = new URL(limpia)
+    for (const p of PARAMS_TRACKING) u.searchParams.delete(p)
+    // Reconstruye sin query vacío sobrante y sin barra final.
+    let salida = u.origin + u.pathname.replace(/\/$/, '')
+    const qs = u.searchParams.toString()
+    if (qs) salida += '?' + qs
+    return salida
+  } catch {
+    return limpia
+  }
+}
+
 // Descarga un feed con fetch nativo (funciona en Cloudflare Workers) y lo parsea
 // con parseString (XML puro JS). NO usar parser.parseURL: usa el cliente HTTP de
 // Node, que NO funciona en Workers → era la causa de que las noticias no llegaran.
@@ -88,7 +110,7 @@ async function descargarFeed(feed: typeof FEEDS[number]): Promise<NoticiaRaw[]> 
       return [{
         titulo: item.title ?? 'Sin título',
         resumen: item.contentSnippet ?? item.summary ?? null,
-        url: item.link,
+        url: normalizarUrl(item.link),
         publicado_at: item.pubDate ?? item.isoDate ?? null,
         fuente_nombre: feed.fuente_nombre,
         idioma: feed.idioma,
@@ -107,10 +129,10 @@ export async function obtenerNoticias(): Promise<NoticiaRaw[]> {
   const resultados = await Promise.all(FEEDS.map(descargarFeed))
   const todas = resultados.flat()
 
-  // Dedup en memoria: Google News genera URLs distintas para la misma noticia
-  // cuando aparece en múltiples búsquedas (distinto base64 de redirect).
-  // El UNIQUE de BD filtra por URL, no por contenido. Aquí filtramos por título
-  // (lowercased) para evitar insertar el mismo artículo dos veces desde feeds distintos.
+  // Dedup en memoria (misma pasada): filtra por título y por URL ya normalizada.
+  // Entre pasadas distintas del cron, el UNIQUE por URL de la BD hace el resto
+  // (la URL normalizada hace que ?xy=rss y ?xy=1 colapsen a la misma). Google News
+  // además genera URLs distintas por feed → el filtro por título las atrapa aquí.
   const titulosVistos = new Set<string>()
   const urlsVistas = new Set<string>()
   return todas.filter((n) => {
