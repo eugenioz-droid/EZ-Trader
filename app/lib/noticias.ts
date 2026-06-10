@@ -57,6 +57,44 @@ const FEEDS = [
     fuente_nombre: 'Banco Central de Chile (RPM)',
     idioma: 'es',
   },
+  // ── FASE 2 (hub público): feeds para poblar más secciones ──────────────
+  // Cripto (sección bitcoin). CoinTelegraph en español — alto interés masivo.
+  {
+    nombre: 'CoinTelegraph ES',
+    url: 'https://es.cointelegraph.com/feed',
+    fuente_nombre: 'CoinTelegraph',
+    idioma: 'es',
+  },
+  // Economía Chile general (sección nacional + dolar/cobre/ipsa/uf). Cooperativa:
+  // masivo, sin paywall. Verificado (15 items).
+  {
+    nombre: 'Cooperativa Economía',
+    url: 'https://www.cooperativa.cl/noticias/site/tax/port/all/rss_6___1.xml',
+    fuente_nombre: 'Cooperativa Economía',
+    idioma: 'es',
+  },
+  // Economía Chile especializada (sección nacional + ipsa). La Tercera/Pulso.
+  // Verificado (61 items).
+  {
+    nombre: 'La Tercera Pulso',
+    url: 'https://www.latercera.com/arc/outboundfeeds/rss/category/pulso/?outputType=xml',
+    fuente_nombre: 'La Tercera Pulso',
+    idioma: 'es',
+  },
+  // Bolsa / mercados EE.UU. (sección sp500). CNBC Markets. Verificado (30 items).
+  {
+    nombre: 'CNBC Markets',
+    url: 'https://search.cnbc.com/rs/search/combinedcms/view.xml?partnerId=wrss01&id=15839069',
+    fuente_nombre: 'CNBC Markets',
+    idioma: 'en',
+  },
+  // Commodities / oro (sección oro + cobre + petroleo). Investing.com. Verificado (10 items).
+  {
+    nombre: 'Investing Commodities',
+    url: 'https://www.investing.com/rss/news_11.rss',
+    fuente_nombre: 'Investing Commodities',
+    idioma: 'en',
+  },
 ]
 
 export interface NoticiaRaw {
